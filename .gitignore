@@ -2,5 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
-
 *.Rproj
+.httr-oauth
+
+cache/
+
+modules/PSP_Clean/data/
