@@ -1,5 +1,5 @@
 dataPurification_BCPSP = function(treeDataRaw, plotHeaderDataRaw) {
-  browser()
+
     headerData <- plotHeaderDataRaw[tot_stand_age != -99,][
       ,':='(utmtimes = length(unique(utm_zone)),
             eastingtimes = length(unique(utm_easting)),

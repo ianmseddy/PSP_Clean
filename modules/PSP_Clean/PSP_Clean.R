@@ -97,7 +97,7 @@ doEvent.PSP_Clean = function(sim, eventTime, eventType) {
 ### template initialization
 Init <- function(sim) {
 
- browser()
+
   sim$pspAB <- dataPurification_ABMature(treeDataRaw = sim$pspABMatureRaw, plotHeaderDataRaw = sim$pspLocationABRaw)
 
   sim$pspBC <- dataPurification_BCPSP(treeDataRaw = sim$pspBCRaw$treedata, plotHeaderDataRaw = sim$pspBCRaw$plotheader)
