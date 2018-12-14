@@ -15,7 +15,7 @@ defineModule(sim, list(
   timeunit = "year",
   citation = list("citation.bib"),
   documentation = list("README.txt", "PSP_Clean.Rmd"),
-  reqdPkgs = list("data.table"),
+  reqdPkgs = list("data.table", "sf"),
   parameters = rbind(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
     defineParameter(".useCache", "logical", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
@@ -43,11 +43,8 @@ defineModule(sim, list(
   ),
   outputObjects = bind_rows(
     #createsOutput("objectName", "objectClass", "output object description", ...),
-    createsOutput(objectName = "pspAB", objectClass = "list", desc = "list of cleaned AB PSP header and tree data"),
-    createsOutput(objectName = "pspBC", objectClass = "list", desc = "list of cleaned BC PSP header and tree data"),
-    createsOutput(objectName = "pspSK", objectClass = "list", desc = "list of cleaned SK PSP header and tree data"),
-    createsOutput(objectName = "pspSKMistic", objectClass = "list",
-                  desc = "list of cleaned SK Temporary Sampling Plot Mistic header and tree data")
+    createsOutput(objectName = "plotLocations", objectClass = "sf", desc = "merged PSP location data"),
+    createsOutput(objectName = "allSP", objectClass = "data.table", desc = "merged PSP and TSP data")
   )
 ))
 
@@ -58,28 +55,12 @@ doEvent.PSP_Clean = function(sim, eventTime, eventType) {
   switch(
     eventType,
     init = {
-      ### check for more detailed object dependencies:
-      ### (use `checkObject` or similar)
 
       # do stuff for this event
       sim <- Init(sim)
 
     },
 
-    event1 = {
-      # ! ----- EDIT BELOW ----- ! #
-      # do stuff for this event
-
-      # e.g., call your custom functions/methods here
-      # you can define your own methods below this `doEvent` function
-
-      # schedule future event(s)
-
-      # e.g.,
-      # sim <- scheduleEvent(sim, time(sim) + increment, "PSP_Clean", "templateEvent")
-
-      # ! ----- STOP EDITING ----- ! #
-    },
     event2 = {
 
     },
@@ -98,18 +79,74 @@ doEvent.PSP_Clean = function(sim, eventTime, eventType) {
 Init <- function(sim) {
 
 
-  sim$pspAB <- dataPurification_ABMature(treeDataRaw = sim$pspABMatureRaw, plotHeaderDataRaw = sim$pspLocationABRaw)
+  pspAB <- dataPurification_ABMature(treeDataRaw = sim$pspABMatureRaw, plotHeaderDataRaw = sim$pspLocationABRaw)
 
-  sim$pspBC <- dataPurification_BCPSP(treeDataRaw = sim$pspBCRaw$treedata, plotHeaderDataRaw = sim$pspBCRaw$plotheader)
+  pspBC<- dataPurification_BCPSP(treeDataRaw = sim$pspBCRaw$treedata, plotHeaderDataRaw = sim$pspBCRaw$plotheader)
 
-  sim$pspSK <- dataPurification_SKPSP(SADataRaw = sim$pspSKRaw$plotheader1, plotHeaderRaw = sim$pspSKRaw$plotheader3,
+  pspSK <- dataPurification_SKPSP(SADataRaw = sim$pspSKRaw$plotheader1, plotHeaderRaw = sim$pspSKRaw$plotheader3,
                                       measureHeaderRaw = sim$pspSKRaw$plotheader2, treeDataRaw= sim$pspSKRaw$treedata)
 
-  sim$tspSKMistic <- dataPurification_SKTSP_Mistic(compiledPlotData = sim$tspSKMisticRaw$plotheader,
+  tspSKMistic <- dataPurification_SKTSP_Mistic(compiledPlotData = sim$tspSKMisticRaw$plotheader,
                                                    compiledTreeData = sim$tspSKMisticRaw$treedata)
 
-  sim$pspNFI <- dataPurification_NFIPSP(lgptreeRaw = sim$pspNFITreeRaw, lgpHeaderRaw = sim$pspNFIHeaderRaw,
+  pspNFI <- dataPurification_NFIPSP(lgptreeRaw = sim$pspNFITreeRaw, lgpHeaderRaw = sim$pspNFIHeaderRaw,
                                         approxLocation = sim$pspNFILocationRaw)
+
+  pspNFI$treeData[,Genus := NULL]
+
+  allSP <- data.table::rbindlist(list(pspAB$treeData,
+                                       pspBC$treeData,
+                                       pspSK$treeData,
+                                       tspSKMistic$treeData,
+                                       pspNFI$treeData),
+                                  use.names = TRUE)
+
+  allLocations <- data.table::rbindlist(list(pspAB$plotHeaderData,
+                                             pspBC$plotHeaderData,
+                                             pspSK$plotHeaderData,
+                                             tspSKMistic$plotHeaderData,
+                                             pspNFI$plotHeaderData),
+                                        use.names = TRUE)
+
+  allLocationsUTM <- allLocations[is.na(Longitude)| Longitude == 0,]
+  allLocationsWGS <- allLocations[!is.na(Longitude) & Longitude != 0,]
+
+  # a few points in UTM 11 have too few northing digits. Check Yong code? Blame Alberta? Blame Alberta.
+  allLocationsUTM <- allLocationsUTM[nchar(allLocationsUTM$Northing) > 3,] #better way to fix?
+
+  allLocationsWGS <- st_as_sf(x = allLocationsWGS,
+                          coords = c("Longitude", "Latitude"),
+                          crs = "+proj=longlat +datum=WGS84")
+  set(allLocationsWGS, NULL, c("Northing", "Easting"),NULL) #need equal number of columns
+
+  allLocationsReproj <- lapply(unique(allLocationsUTM$Zone), FUN = function(x, points = allLocationsUTM) {
+    output <- st_as_sf(x = points[points$Zone == x,],
+                       coords = c("Easting", "Northing"),
+                       crs = paste0("+proj=utm +zone=", x, " +ellps=GRS80 +datum=NAD83 +units=m +no_defs "))
+    set(output, NULL, c("Latitude", "Longitude"),NULL) #mostly NA or wrong
+    output <- st_transform(output, crs = "+proj=longlat +datum=WGS84") #reproject to longlat
+    return(output)
+  })
+  names(allLocationsReproj) <- paste0("prev_UTMzone", unique(allLocationsUTM$Zone))
+
+  #Merge all datasets together
+  allLocationsReproj$WGS <- allLocationsWGS
+  allLocationsReproj$deparse.level <- 1
+  sim$plotLocations <- do.call(rbind, args =allLocationsReproj)
+
+  #Zone is now incorrect, I don't know why baseYear and MeasureYear are in plotLocation.
+  set(sim$plotLocations, NULL, "Zone", NULL)
+  sim$allSP <- allSP
+  # set(sim$plotLocations, NULL, c("baseYear", "MeasureYear"), NULL) #I dont' think we need this, not sure yet
+
+  # problems <- sim$plotLocations[, .N, .(MeasureID, treeNumber, species)]
+  #
+  # merged <- allPSP[sim$plotLocations, on = c("MeasureID", "OrigPlotID1", "MeasureYear")]
+  # merged <- st_as_sf(merged)
+
+  # st_write(allLocationsWGS,
+  #          dsn = file.path(outputPath(sim), "allLocationsWGS.kml"),
+  #          driver = "KML")
 
   return(invisible(sim))
 }
@@ -120,11 +157,6 @@ Event1 <- function(sim) {
   return(invisible(sim))
 }
 
-### template for your event2
-Event2 <- function(sim) {
-
-  return(invisible(sim))
-}
 
 .inputObjects <- function(sim) {
   dPath <- dataPath(sim)
