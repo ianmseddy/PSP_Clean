@@ -1,5 +1,5 @@
 dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
-
+browser()
   setnames(
       treeDataRaw,
       c("Groupnumber", "Plotnumber", "Treenumber"),
@@ -25,9 +25,7 @@ dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
                                       !is.na(Stumpage)]$Stumpage -
                         headerData_SA[!is.na(DBHage) &
                                         !is.na(Stumpage)]$DBHage))
-    headerData_SA <-
-      headerData_SA[!is.na(DBHage) &
-                      is.na(Stumpage), Stumpage := DBHage + SADiff][, .(GroupNumber, PlotNumber, MeasureYear, Stumpage)]
+    headerData_SA <- headerData_SA[!is.na(DBHage) & is.na(Stumpage), Stumpage := DBHage + SADiff][, .(GroupNumber, PlotNumber, MeasureYear, Stumpage)]
     headerData_SA[, firstMeasureYear := min(MeasureYear), by = c("GroupNumber")][, treeAge :=
                                                                                    Stumpage - MeasureYear + firstMeasureYear]
     headerData_SA <-  headerData_SA[, .(baseYear = mean(firstMeasureYear),
@@ -60,8 +58,7 @@ dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
     tempPlotID[, MeasureID := as.numeric(row.names(tempPlotID))]
     tempPlotID <- tempPlotID[, .(MeasureID, GroupNumber, PlotNumber, MeasureYear)]
     setkey(tempPlotID, GroupNumber, PlotNumber, MeasureYear)
-    treeData <-
-      tempPlotID[setkey(treeData, GroupNumber, PlotNumber, MeasureYear), nomatch = 0]
+    treeData <- tempPlotID[setkey(treeData, GroupNumber, PlotNumber, MeasureYear), nomatch = 0]
 
     # treeData condition check
     treeData <-  treeData[Conditioncode1 != 25 & Conditioncode1 != 61 &

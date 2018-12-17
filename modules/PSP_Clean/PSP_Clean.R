@@ -60,39 +60,39 @@ doEvent.PSP_Clean = function(sim, eventTime, eventType) {
       sim <- Init(sim)
 
     },
-
-    event2 = {
-
-    },
     warning(paste("Undefined event type: '", current(sim)[1, "eventType", with = FALSE],
                   "' in module '", current(sim)[1, "moduleName", with = FALSE], "'", sep = ""))
   )
   return(invisible(sim))
 }
 
-## event functions
-#   - follow the naming convention `modulenameEventtype()`;
-#   - `modulenameInit()` function is required for initiliazation;
-#   - keep event functions short and clean, modularize by calling subroutines from section below.
 
 ### template initialization
 Init <- function(sim) {
 
-
+  #Alberta
   pspAB <- dataPurification_ABMature(treeDataRaw = sim$pspABMatureRaw, plotHeaderDataRaw = sim$pspLocationABRaw)
+  #Yong's original script did not remove treeNumber 9999. I prefer to keep his functions unchanged,  so I do so here
+  pspAB$treeData <- pspAB$treeData[pspAB$treeData$TreeNumber != 9999,]
 
+  #BC
   pspBC<- dataPurification_BCPSP(treeDataRaw = sim$pspBCRaw$treedata, plotHeaderDataRaw = sim$pspBCRaw$plotheader)
 
+  #Saskatchewan PSP
   pspSK <- dataPurification_SKPSP(SADataRaw = sim$pspSKRaw$plotheader1, plotHeaderRaw = sim$pspSKRaw$plotheader3,
-                                      measureHeaderRaw = sim$pspSKRaw$plotheader2, treeDataRaw= sim$pspSKRaw$treedata)
+                                  measureHeaderRaw = sim$pspSKRaw$plotheader2, treeDataRaw= sim$pspSKRaw$treedata)
 
+  #Saskatchewan Mistic
   tspSKMistic <- dataPurification_SKTSP_Mistic(compiledPlotData = sim$tspSKMisticRaw$plotheader,
-                                                   compiledTreeData = sim$tspSKMisticRaw$treedata)
+                                               compiledTreeData = sim$tspSKMisticRaw$treedata)
+  #Yong's original script did not remove treeNumber 0 (with 0 measurements).
+  tspSKMistic$treeData <- tspSKmistic$treeData[tspSKmistic$treeData$treeNumber != 0,]
 
+  #NFI
   pspNFI <- dataPurification_NFIPSP(lgptreeRaw = sim$pspNFITreeRaw, lgpHeaderRaw = sim$pspNFIHeaderRaw,
-                                        approxLocation = sim$pspNFILocationRaw)
+                                    approxLocation = sim$pspNFILocationRaw)
 
-  pspNFI$treeData[,Genus := NULL]
+  pspNFI$treeData[,Genus := NULL] #This column is not in any of the other PSP datasets
 
   allSP <- data.table::rbindlist(list(pspAB$treeData,
                                        pspBC$treeData,
@@ -108,40 +108,16 @@ Init <- function(sim) {
                                              pspNFI$plotHeaderData),
                                         use.names = TRUE)
 
-  allLocationsUTM <- allLocations[is.na(Longitude)| Longitude == 0,]
-  allLocationsWGS <- allLocations[!is.na(Longitude) & Longitude != 0,]
+  allLocations <- geoCleanPSP(Locations = allLocations)
 
-  # a few points in UTM 11 have too few northing digits. Check Yong code? Blame Alberta? Blame Alberta.
-  allLocationsUTM <- allLocationsUTM[nchar(allLocationsUTM$Northing) > 3,] #better way to fix?
-
-  allLocationsWGS <- st_as_sf(x = allLocationsWGS,
-                          coords = c("Longitude", "Latitude"),
-                          crs = "+proj=longlat +datum=WGS84")
-  set(allLocationsWGS, NULL, c("Northing", "Easting"),NULL) #need equal number of columns
-
-  allLocationsReproj <- lapply(unique(allLocationsUTM$Zone), FUN = function(x, points = allLocationsUTM) {
-    output <- st_as_sf(x = points[points$Zone == x,],
-                       coords = c("Easting", "Northing"),
-                       crs = paste0("+proj=utm +zone=", x, " +ellps=GRS80 +datum=NAD83 +units=m +no_defs "))
-    set(output, NULL, c("Latitude", "Longitude"),NULL) #mostly NA or wrong
-    output <- st_transform(output, crs = "+proj=longlat +datum=WGS84") #reproject to longlat
-    return(output)
-  })
-  names(allLocationsReproj) <- paste0("prev_UTMzone", unique(allLocationsUTM$Zone))
-
-  #Merge all datasets together
-  allLocationsReproj$WGS <- allLocationsWGS
-  allLocationsReproj$deparse.level <- 1
-  sim$plotLocations <- do.call(rbind, args =allLocationsReproj)
-
-  #Zone is now incorrect, I don't know why baseYear and MeasureYear are in plotLocation.
-  set(sim$plotLocations, NULL, "Zone", NULL)
+  sim$allLocations <- allLocations
   sim$allSP <- allSP
-  # set(sim$plotLocations, NULL, c("baseYear", "MeasureYear"), NULL) #I dont' think we need this, not sure yet
 
-  # problems <- sim$plotLocations[, .N, .(MeasureID, treeNumber, species)]
+  # set(sim$allLocations, NULL, c("baseYear", "MeasureYear"), NULL) #I dont' think we need this, not sure yet
+
+  # problems <- sim$allLocations[, .N, .(MeasureID, treeNumber, species)]
   #
-  # merged <- allPSP[sim$plotLocations, on = c("MeasureID", "OrigPlotID1", "MeasureYear")]
+  # merged <- allPSP[sim$allLocations, on = c("MeasureID", "OrigPlotID1", "MeasureYear")]
   # merged <- st_as_sf(merged)
 
   # st_write(allLocationsWGS,
@@ -151,10 +127,39 @@ Init <- function(sim) {
   return(invisible(sim))
 }
 
-### template for your event1
-Event1 <- function(sim) {
+geoCleanPSP <- function(inTree, Locations) {
 
-  return(invisible(sim))
+  #Seperate those using UTM
+  LocationsUTM <- Locations[is.na(Longitude)| Longitude == 0,]
+  LocationsWGS <- Locations[!is.na(Longitude) & Longitude != 0,]
+
+  # a few points in UTM 11 are missing northing digits. Blame Alberta?
+  LocationsUTM <- LocationsUTM[nchar(LocationsUTM$Northing) > 3,] #better way to fix?
+
+  LocationsWGS <- st_as_sf(x = LocationsWGS,
+                              coords = c("Longitude", "Latitude"),
+                              crs = "+proj=longlat +datum=WGS84")
+  set(LocationsWGS, NULL, c("Northing", "Easting"),NULL) #need equal number of columns
+
+  LocationsReproj <- lapply(unique(LocationsUTM$Zone), FUN = function(x, points = LocationsUTM) {
+    output <- st_as_sf(x = points[points$Zone == x,],
+                       coords = c("Easting", "Northing"),
+                       crs = paste0("+proj=utm +zone=", x, " +ellps=GRS80 +datum=NAD83 +units=m +no_defs "))
+    set(output, NULL, c("Latitude", "Longitude"),NULL) #mostly NA or wrong
+    output <- st_transform(output, crs = "+proj=longlat +datum=WGS84") #reproject to longlat
+    return(output)
+  })
+  names(LocationsReproj) <- paste0("prev_UTMzone", unique(LocationsUTM$Zone))
+
+  #Merge all datasets together
+  LocationsReproj$WGS <- LocationsWGS
+  LocationsReproj$deparse.level <- 1
+
+  Locations <- do.call(rbind, args = LocationsReproj)
+
+  #Zone is now incorrect, I don't know why baseYear and MeasureYear are in plotLocation.
+  set(Locations, NULL, "Zone", NULL)
+  return(Locations)
 }
 
 
