@@ -86,7 +86,7 @@ Init <- function(sim) {
   tspSKMistic <- dataPurification_SKTSP_Mistic(compiledPlotData = sim$tspSKMisticRaw$plotheader,
                                                compiledTreeData = sim$tspSKMisticRaw$treedata)
   #Yong's original script did not remove treeNumber 0 (with 0 measurements).
-  tspSKMistic$treeData <- tspSKmistic$treeData[tspSKmistic$treeData$treeNumber != 0,]
+  tspSKMistic$treeData <- tspSKMistic$treeData[tspSKMistic$treeData$treeNumber != 0,]
 
   #NFI
   pspNFI <- dataPurification_NFIPSP(lgptreeRaw = sim$pspNFITreeRaw, lgpHeaderRaw = sim$pspNFIHeaderRaw,

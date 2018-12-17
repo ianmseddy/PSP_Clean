@@ -1,5 +1,5 @@
 dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
-browser()
+
   setnames(
       treeDataRaw,
       c("Groupnumber", "Plotnumber", "Treenumber"),
