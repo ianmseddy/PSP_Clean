@@ -2,6 +2,7 @@ dataPurification_SKPSP <- function(SADataRaw,
                                    plotHeaderRaw,
                                    measureHeaderRaw,
                                    treeDataRaw) {
+  browser()
   # range(SADataRaw$COUNTED_AGE) # NA NA
   # range(SADataRaw$TOTAL_AGE) # NA NA
   # unique(SADataRaw$TREE_STATUS)

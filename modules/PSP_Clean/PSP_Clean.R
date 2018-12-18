@@ -86,13 +86,30 @@ Init <- function(sim) {
   tspSKMistic <- dataPurification_SKTSP_Mistic(compiledPlotData = sim$tspSKMisticRaw$plotheader,
                                                compiledTreeData = sim$tspSKMisticRaw$treedata)
   #Yong's original script did not remove treeNumber 0 (with 0 measurements).
-  tspSKMistic$treeData <- tspSKMistic$treeData[tspSKMistic$treeData$treeNumber != 0,]
+
+  tspSKMistic$treeData <- tspSKMistic$treeData[tspSKMistic$treeData$TreeNumber != 0,]
 
   #NFI
   pspNFI <- dataPurification_NFIPSP(lgptreeRaw = sim$pspNFITreeRaw, lgpHeaderRaw = sim$pspNFIHeaderRaw,
                                     approxLocation = sim$pspNFILocationRaw)
 
   pspNFI$treeData[,Genus := NULL] #This column is not in any of the other PSP datasets
+
+  #This breaks the key if any tables share plot or group ID. MeasureID is still unique
+  browser()
+  #Rename keys before combining PSP datasets
+  pspAB$treeData$OrigPlotID1 <- paste0("AB", pspAB$treeData$OrigPlotID1)
+  pspAB$plotHeaderData$OrigPlotID1 <- paste0("AB", pspAB$plotHeaderData$OrigPlotID1)
+
+  pspSK$treeData$OrigPlotID1 <- paste0("SK", pspSK$treeData$OrigPlotID1)
+  pspSK$plotHeaderData$OrigPlotID1 <- paste0("SK", pspSK$plotHeaderData$OrigPlotID1)
+
+  pspNFI$treeData$OrigPlotID1 <- paste0("NFI", pspNFI$treeData$OrigPlotID1)
+  pspNFI$plotHeaderData$OrigPlotID1 <- paste0("NFI", pspNFI$plotHeaderData$OrigPlotID1)
+
+  tspSKMistic$treeData$OrigPlotID1 <- paste0("SKMistic", tspSKMistic$treeData$OrigPlotID1)
+  tspSKMistic$plotHeaderData$OrigPlotID1 <- paste0("SKMistic", tspSKMistic$plotHeaderData$OrigPlotID1)
+
 
   allSP <- data.table::rbindlist(list(pspAB$treeData,
                                        pspBC$treeData,
@@ -112,6 +129,8 @@ Init <- function(sim) {
 
   sim$allLocations <- allLocations
   sim$allSP <- allSP
+
+
 
   # set(sim$allLocations, NULL, c("baseYear", "MeasureYear"), NULL) #I dont' think we need this, not sure yet
 

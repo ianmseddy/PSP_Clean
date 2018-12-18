@@ -16,16 +16,13 @@ dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
     headerData[Meridian == "UTM 117(NAD83)", Zone := 11]
     headerData[Meridian == "UTM 111(NAD83)", Zone := 12]
 
-
     # generate head data for each plot, unmanaged, SA available, location available
-    headerData_SA <-
-      treeDataRaw[TreeNumber == 0 & (!is.na(DBHage) | !is.na(Stumpage)), ]
-    SADiff <-
-      as.integer(mean(headerData_SA[!is.na(DBHage) &
-                                      !is.na(Stumpage)]$Stumpage -
-                        headerData_SA[!is.na(DBHage) &
-                                        !is.na(Stumpage)]$DBHage))
-    headerData_SA <- headerData_SA[!is.na(DBHage) & is.na(Stumpage), Stumpage := DBHage + SADiff][, .(GroupNumber, PlotNumber, MeasureYear, Stumpage)]
+    headerData_SA <- treeDataRaw[TreeNumber == 0 & (!is.na(DBHage) | !is.na(Stumpage)), ]
+    SADiff <- as.integer(mean(headerData_SA[!is.na(DBHage) &
+                                      !is.na(Stumpage)]$Stumpage - headerData_SA[!is.na(DBHage) &
+                                                                                   !is.na(Stumpage)]$DBHage))
+    headerData_SA <- headerData_SA[!is.na(DBHage) & is.na(Stumpage),
+                                   Stumpage := DBHage + SADiff][, .(GroupNumber, PlotNumber, MeasureYear, Stumpage)]
     headerData_SA[, firstMeasureYear := min(MeasureYear), by = c("GroupNumber")][, treeAge :=
                                                                                    Stumpage - MeasureYear + firstMeasureYear]
     headerData_SA <-  headerData_SA[, .(baseYear = mean(firstMeasureYear),
