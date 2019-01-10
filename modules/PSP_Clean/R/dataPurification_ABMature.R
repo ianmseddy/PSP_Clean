@@ -23,24 +23,22 @@ dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
                                                                                    !is.na(Stumpage)]$DBHage))
     headerData_SA <- headerData_SA[!is.na(DBHage) & is.na(Stumpage),
                                    Stumpage := DBHage + SADiff][, .(GroupNumber, PlotNumber, MeasureYear, Stumpage)]
-    headerData_SA[, firstMeasureYear := min(MeasureYear), by = c("GroupNumber")][, treeAge :=
-                                                                                   Stumpage - MeasureYear + firstMeasureYear]
+    headerData_SA[, firstMeasureYear := min(MeasureYear),
+                  by = c("GroupNumber")][, treeAge := Stumpage - MeasureYear + firstMeasureYear]
     headerData_SA <-  headerData_SA[, .(baseYear = mean(firstMeasureYear),
-                        baseSA = round(mean(treeAge))),
-                    by = c("GroupNumber")]
+                        baseSA = round(mean(treeAge))), by = c("GroupNumber")]
 
 
     # select PSPs
 
     # select the plots with locations
-    headerData <- headerData[(Longitude != 0 & Latitude != 0) |
-                               (Northing != 0 &
-                                  Easting != 0 & !is.na(Zone)), ]
+    headerData <- headerData[(Longitude != 0 & Latitude != 0) |(Northing != 0 & Easting != 0 & !is.na(Zone)), ]
     # select plots unmanaged
     headerData <- headerData[Managed == "No", ]
     # joining the SA information
-    headerData <- setkey(headerData, GroupNumber)[setkey(headerData_SA, GroupNumber), nomatch  = 0][, ':='(
-        Type = NULL, NofSubplot = NULL, StandOrigin = NULL, Managed = NULL)]
+    headerData <- setkey(headerData, GroupNumber)[setkey(headerData_SA, GroupNumber),
+                                      nomatch  = 0][, ':='(Type = NULL, NofSubplot = NULL,
+                                                           StandOrigin = NULL, Managed = NULL)]
     headerData <- unique(headerData, by = "GroupNumber")
 
     treeData <- treeDataRaw[TreeNumber != 0, ][, .(GroupNumber, PlotNumber, MeasureYear, TreeNumber, Species, DBH,
@@ -49,8 +47,7 @@ dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
     treeData <- treeData[!is.na(DBH) & DBH != 0, ]
 
     treeData <- treeData[GroupNumber %in% headerData$GroupNumber, ]
-    tempPlotID <-
-      unique(treeData[, .(GroupNumber, PlotNumber, MeasureYear)],
+    tempPlotID <- unique(treeData[, .(GroupNumber, PlotNumber, MeasureYear)],
              by = c("GroupNumber", "PlotNumber", "MeasureYear"))
     tempPlotID[, MeasureID := as.numeric(row.names(tempPlotID))]
     tempPlotID <- tempPlotID[, .(MeasureID, GroupNumber, PlotNumber, MeasureYear)]
@@ -62,20 +59,10 @@ dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
                  Conditioncode1 != 79 & Conditioncode1 != 80, ]
 
     treeData <- treeData[is.na(Conditioncode2) |
-                           (Conditioncode2 != 25 &
-                              Conditioncode2 != 61 &
-                              Conditioncode2 != 79 &
-                              Conditioncode2 != 80), ]
+                           (Conditioncode2 != 25 & Conditioncode2 != 61 & Conditioncode2 != 79 & Conditioncode2 != 80), ]
     treeData <- treeData[is.na(Conditioncode3) |
-                           (Conditioncode3 != 25 &
-                              Conditioncode3 != 61 &
-                              Conditioncode2 != 79 &
-                              Conditioncode2 != 80), ]
-    treeData[, ':='(
-      Conditioncode1 = NULL,
-      Conditioncode2 = NULL,
-      Conditioncode3 = NULL
-    )]
+                           (Conditioncode3 != 25 & Conditioncode3 != 61 & Conditioncode2 != 79 & Conditioncode2 != 80), ]
+    treeData[, ':='(Conditioncode1 = NULL, Conditioncode2 = NULL, Conditioncode3 = NULL)]
 
     # check the plot size
     treeData[, plotsizetime := as.numeric(length(unique(Treeplotsize))), by = c("MeasureID")]
@@ -84,8 +71,7 @@ dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
       plotids <- unique(treeData[plotsizetime == 2, ]$MeasureID)
       for (plotid in plotids) {
         groupnumber <- unique(treeData[MeasureID == plotid, ]$GroupNumber)
-        plotsize <-
-          as.numeric(headerData[GroupNumber == groupnumber, ]$PlotSize) # obtain plot size from headData
+        plotsize <- as.numeric(headerData[GroupNumber == groupnumber, ]$PlotSize) # obtain plot size from headData
         treeData[MeasureID == plotid, Treeplotsize := plotsize]
       }
     }
@@ -95,9 +81,8 @@ dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
                                    by = "MeasureID"), GroupNumber)
     headerData[, PlotSize := NULL]
     headerData <- measureiddata[setkey(headerData, GroupNumber), nomatch  = 0][, Longitude := -(Longitude)]
-    treeData[, ':='(DBH = DBH / 10,
-                    PlotSize = NULL,
-                    plotsizetime = NULL)]
+    treeData[, ':='(DBH = DBH / 10, PlotSize = NULL, plotsizetime = NULL)]
+
     headerData[, MeasureID := paste("ABPSPMature_", MeasureID, sep = "")]
     setnames(headerData, "GroupNumber", "OrigPlotID1")
     headerData <- headerData[, .(MeasureID, OrigPlotID1, MeasureYear, Longitude, Latitude, Zone, Easting,
