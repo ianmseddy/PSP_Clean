@@ -1,6 +1,5 @@
 dataPurification_SKTSP_Mistic <- function(compiledPlotData,
                                           compiledTreeData) {
-  browser()
   options(scipen = 999) # avoid scientific notation
 
   headData <- compiledPlotData[, .(ID_FOR, CRZ_ZONE, CRZNORTH, CRZ_EAST, PLOTNUM, YEAR, PSIZE, P_AGECLS)]
