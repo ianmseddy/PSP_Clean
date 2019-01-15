@@ -56,6 +56,10 @@ mySim <- simInit(times = times, params = parameters, modules = modules,
 mySimOut <- spades(mySim)
 ```
 
+```{r}
+#Get climate Data
+```
+
 # Events
 
 Describe what happens for each event type.
@@ -77,7 +81,9 @@ If `sourceURL` is specified, `downloadData("PSP_Clean", "path/to/modules/dir")` 
 
 ## Output data
 
-Description of the module outputs.
+Main outputs are allSP (the combined sample plots) and allLocations(combined locations of sample plots). Both datasets have column "MeasureID" which is a unique ID assigned to each plot/sample year combination. Thus the same plot sampled in consecutive years has two different MeasureIDs. There are also "OrigPlotID1" and "OrigPlotID2" which are remnants from the original disparate sample plot datasets. Some datasets had composite keys hence OrigPlotID2, which is NA for those sampe plots that did not.
+
+A second cleaning must preserve only plots that were sampled at least3 times over a period exceeding 10 years (this is the most selective criteria), measured at DBH, with at least 30 trees in the stand. Only trees wider than 10 cm at DBH are used, because the size cut-off for measurement differs by province) 
 
 # Links to other modules
 

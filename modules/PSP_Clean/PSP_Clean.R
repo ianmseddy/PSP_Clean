@@ -95,9 +95,8 @@ Init <- function(sim) {
 
   pspNFI$treeData[,Genus := NULL] #This column is not in any of the other PSP datasets
 
-  #This breaks the key if any tables share plot or group ID. MeasureID is still unique
-  browser()
-  #Rename keys before combining PSP datasets
+  #Rename keys before combining PSP datasets (BC is already unique with BC identified in value)
+  #Composite keys remain separate; 2nd part of key missing from HeaderData
   pspAB$treeData$OrigPlotID1 <- paste0("AB", pspAB$treeData$OrigPlotID1)
   pspAB$plotHeaderData$OrigPlotID1 <- paste0("AB", pspAB$plotHeaderData$OrigPlotID1)
 
@@ -110,25 +109,22 @@ Init <- function(sim) {
   tspSKMistic$treeData$OrigPlotID1 <- paste0("SKMistic", tspSKMistic$treeData$OrigPlotID1)
   tspSKMistic$plotHeaderData$OrigPlotID1 <- paste0("SKMistic", tspSKMistic$plotHeaderData$OrigPlotID1)
 
-
-  allSP <- data.table::rbindlist(list(pspAB$treeData,
+  sim$allSP <- data.table::rbindlist(list(pspAB$treeData,
                                        pspBC$treeData,
                                        pspSK$treeData,
                                        tspSKMistic$treeData,
                                        pspNFI$treeData),
                                   use.names = TRUE)
 
-  allLocations <- data.table::rbindlist(list(pspAB$plotHeaderData,
+  sim$allLoc <- data.table::rbindlist(list(pspAB$plotHeaderData,
                                              pspBC$plotHeaderData,
                                              pspSK$plotHeaderData,
                                              tspSKMistic$plotHeaderData,
                                              pspNFI$plotHeaderData),
                                         use.names = TRUE)
 
-  allLocations <- geoCleanPSP(Locations = allLocations)
 
-  sim$allLocations <- allLocations
-  sim$allSP <- allSP
+  sim$allLocSF <- geoCleanPSP(Locations = sim$allLoc)
 
 
 
@@ -176,7 +172,7 @@ geoCleanPSP <- function(inTree, Locations) {
 
   Locations <- do.call(rbind, args = LocationsReproj)
 
-  #Zone is now incorrect, I don't know why baseYear and MeasureYear are in plotLocation.
+  #The dataset contains separate entries for different years at the same location, presumably for when CMI is sampled
   set(Locations, NULL, "Zone", NULL)
   return(Locations)
 }

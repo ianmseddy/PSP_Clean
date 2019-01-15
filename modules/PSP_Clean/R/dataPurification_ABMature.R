@@ -41,8 +41,9 @@ dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
                                                            StandOrigin = NULL, Managed = NULL)]
     headerData <- unique(headerData, by = "GroupNumber")
 
-    treeData <- treeDataRaw[TreeNumber != 0, ][, .(GroupNumber, PlotNumber, MeasureYear, TreeNumber, Species, DBH,
-                                                   Height, Conditioncode1, Conditioncode2, Conditioncode3, Treeplotsize)]
+    treeData <- treeDataRaw[TreeNumber != 0, ][
+      , .(GroupNumber, PlotNumber, MeasureYear, TreeNumber, Species, DBH,
+          Height, Conditioncode1, Conditioncode2, Conditioncode3, Treeplotsize)]
     # remove DBH is not available
     treeData <- treeData[!is.na(DBH) & DBH != 0, ]
 
@@ -85,6 +86,8 @@ dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
 
     headerData[, MeasureID := paste("ABPSPMature_", MeasureID, sep = "")]
     setnames(headerData, "GroupNumber", "OrigPlotID1")
+
+
     headerData <- headerData[, .(MeasureID, OrigPlotID1, MeasureYear, Longitude, Latitude, Zone, Easting,
                                  Northing = as.numeric(Northing), PlotSize = PlotSize / 10000, baseYear, baseSA)]
     treeData[, MeasureID := paste("ABPSPMature_", MeasureID, sep = "")]

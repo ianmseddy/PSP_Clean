@@ -1,0 +1,28 @@
+Notes re: PSP and TSP data
+
+Alberta:
+OrigPlotID1 = GroupNumber, OrigPlotID2 = PlotNumber  #MeasureID is created by Yong from unique Group/Plot/Year combinations
+OrigPlotID1 is numeric and has been renamed to have the prefix AB to distinguish it from other PSP data. 
+GIS data is only specific to GroupNumber. This means there are multiple entries that share same location, because GIS data has MeasureID column (unique to Plot).
+MeasureID is unique to PlotNumber so that individual trees are tracked, otherwise treeNumbers would overlap withins same 'Group'. 
+The actual number of unique locations is HeaderData[, .N, (OrigPlotID1, MeasureYear)] = 2033
+
+treeNumber 9999 is in Alberta. 5% of data is NA still. Perhaps we want to keep this for estimating biomass in an area? 
+
+BC: Uses a composite key with plotNumber and groupNumber. Have not found any mistakes but missing huge area of province
+
+Saskatchewan:
+tspSKMistic: does not OrigPlotID2 or equivalent. 
+Had to remove trees with treeNumber 0 (150/96,000) Perhaps we want to keep this for estimating biomass in an area? 
+There are duplicate locations but this is because 'STAND' is used to generate the MeasureID, even though many stands share the same location. 
+
+Sk:Does not use OrigPlotID2 or equivalent
+OrigPlotID1 is numeric and has been renamed to have the prefix SK to distinguish it from other PSP data
+
+
+NFI: 
+data has no repeat measurements.
+OrigPlotID1 is numeric and has been renamed to have the prefix SK to distinguish it from other PSP data
+
+
+

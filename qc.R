@@ -1,9 +1,24 @@
 allSP <- mySimOut$allSP
-allLoc <- mySimOut$plotLocations
+allLoc <- mySimOut$allLocations
 
-plot(allLoc)
-allLoc
-allSP[, .N, .(TreeNumber, Species, MeasureID)]
+#This is the correct answer but the wrong method because OrigPlotID1 may now be identical between provincial datasets
+#.e.g both could be one. I did not fix this because the geographic data does not have OrigPlotID2 column necessary for composite key
+repeats <- allSP[, .N, .(TreeNumber, OrigPlotID1, OrigPlotID2)]
+repeats[N > 1, ]
+#It would appear there are 366446 repeated measurements of the same trees. Reasonable estimate
+#Alternative method
+
+repeats2 <- allSP[, .N, c("MeasureID", "TreeNumber")]
+#need to remove these after confirming it isn't an issue with SKMistic cleaning. did we lose OriginalPlotID2?
+
+#This number is ridiculous differnt and also wrong, 20,000
+
+Flag <- allSP[, .N, c("MeasureID", "TreeNumber", "MeasureYear", "OrigPlotID1")][N != 1]
+
+
+unique(repeats$N)
+repeats[N == 12,] # Probably in BC
+allLoc[allLoc$OrigPlotID1 == "59071 R000105",]
 
 #How many entries have same treeNumber, Species, and MeasureID (so how many replicates?)
 qc <- allSP[, .(.N), .(TreeNumber, Species, MeasureID)]
@@ -14,7 +29,7 @@ flag <- qc[N >1,]
 # allSP[MeasureID == "SKTSP_Mistik_1054" & TreeNumber == 23,]
 # allSP[MeasureID == "SKTSP_Mistik_433"  & TreeNumber == 2,]
 #E.G.
-# MeasureID OrigPlotID1 OrigPlotID2 MeasureYear TreeNumber Species  DBH Height
+# MeasureID           OrigPlotID1 OrigPlotID2 MeasureYear TreeNumber Species  DBH Height
 # 1: SKTSP_Mistik_433 12655970594          NA        1999          2      WS  5.1    5.4
 # 2: SKTSP_Mistik_433 12655970594          NA        1999          2      TA 18.6   19.9
 # 3: SKTSP_Mistik_433 12655970594          NA        1999          2      WS  6.0    5.7
