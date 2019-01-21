@@ -1,8 +1,3 @@
-
-# Everything in this file gets sourced during simInit, and all functions and objects
-# are put into the simList. To use objects, use sim$xxx, and are thus globally available
-# to all modules. Functions can be used without sim$ as they are namespaced, like functions
-# in R packages. If exact location is required, functions will be: sim$<moduleName>$FunctionName
 defineModule(sim, list(
   name = "PSP_Clean",
   description = NA, #"insert module description here",
@@ -43,8 +38,9 @@ defineModule(sim, list(
   ),
   outputObjects = bind_rows(
     #createsOutput("objectName", "objectClass", "output object description", ...),
-    createsOutput(objectName = "plotLocations", objectClass = "sf", desc = "merged PSP location data"),
-    createsOutput(objectName = "allSP", objectClass = "data.table", desc = "merged PSP and TSP data")
+    createsOutput(objectName = "PSPmeasure", objectClass = "data.table", desc = "merged PSP and TSP individual measurements"),
+    createsOutput(objectName = "PSPplot", objectClass = "data.table", desc = "merged PSP and TSP plot data"),
+    createsOutput(objectName = "PSPgis", objectClass = "sf", desc = "Plot location sf object. Contains duplicates")
   )
 ))
 
@@ -56,7 +52,6 @@ doEvent.PSP_Clean = function(sim, eventTime, eventType) {
     eventType,
     init = {
 
-      # do stuff for this event
       sim <- Init(sim)
 
     },
@@ -72,8 +67,6 @@ Init <- function(sim) {
 
   #Alberta
   pspAB <- dataPurification_ABMature(treeDataRaw = sim$pspABMatureRaw, plotHeaderDataRaw = sim$pspLocationABRaw)
-  #Yong's original script did not remove treeNumber 9999. I prefer to keep his functions unchanged,  so I do so here
-  pspAB$treeData <- pspAB$treeData[pspAB$treeData$TreeNumber != 9999,]
 
   #BC
   pspBC<- dataPurification_BCPSP(treeDataRaw = sim$pspBCRaw$treedata, plotHeaderDataRaw = sim$pspBCRaw$plotheader)
@@ -109,14 +102,14 @@ Init <- function(sim) {
   tspSKMistic$treeData$OrigPlotID1 <- paste0("SKMistic", tspSKMistic$treeData$OrigPlotID1)
   tspSKMistic$plotHeaderData$OrigPlotID1 <- paste0("SKMistic", tspSKMistic$plotHeaderData$OrigPlotID1)
 
-  sim$allSP <- data.table::rbindlist(list(pspAB$treeData,
+  sim$PSPmeasure <- data.table::rbindlist(list(pspAB$treeData,
                                        pspBC$treeData,
                                        pspSK$treeData,
                                        tspSKMistic$treeData,
                                        pspNFI$treeData),
                                   use.names = TRUE)
 
-  sim$allLoc <- data.table::rbindlist(list(pspAB$plotHeaderData,
+  sim$PSPplot <- data.table::rbindlist(list(pspAB$plotHeaderData,
                                              pspBC$plotHeaderData,
                                              pspSK$plotHeaderData,
                                              tspSKMistic$plotHeaderData,
@@ -124,18 +117,10 @@ Init <- function(sim) {
                                         use.names = TRUE)
 
 
-  sim$allLocSF <- geoCleanPSP(Locations = sim$allLoc)
+  sim$PSPgis <- geoCleanPSP(Locations = sim$PSPplot)
 
 
-
-  # set(sim$allLocations, NULL, c("baseYear", "MeasureYear"), NULL) #I dont' think we need this, not sure yet
-
-  # problems <- sim$allLocations[, .N, .(MeasureID, treeNumber, species)]
-  #
-  # merged <- allPSP[sim$allLocations, on = c("MeasureID", "OrigPlotID1", "MeasureYear")]
-  # merged <- st_as_sf(merged)
-
-  # st_write(allLocationsWGS,
+  # st_write(sim$PSPgis,
   #          dsn = file.path(outputPath(sim), "allLocationsWGS.kml"),
   #          driver = "KML")
 
