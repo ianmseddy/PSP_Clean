@@ -23,12 +23,12 @@ For help writing in R Markdown, see http://rmarkdown.rstudio.com/.
 ```{r module_usage}
 library(SpaDES)
 
-setPaths(modulePath = file.path("C:/Ian/Git/PSP_Clean/modules"))
+
 paths <- list(
-  inputPath = "C:/Ian/Git/PSP_Clean/inputs/",
-  outputPath = "C:/Ian/Git/PSP_Clean/outputs",
-  cachePath = "C:/Ian/Git/PSP_Clean/cache/",
-  modulePath = "C:/Ian/Git/PSP_Clean/modules/"
+  inputPath = "inputs/",
+  outputPath = "outputs",
+  cachePath = "cache",
+  modulePath = file.path("../")
 ) # shows where the 4 relevant paths are
 
 setPaths(inputPath = paths$inputPath,
@@ -39,12 +39,8 @@ setPaths(inputPath = paths$inputPath,
 getPaths()
 times <- list(start = 0, end = 10)
 
-parameters <- list(
-  #.progress = list(type = "text", interval = 1), # for a progress bar
-  ## If there are further modules, each can have its own set of parameters:
-  #module1 = list(param1 = value1, param2 = value2),
-  #module2 = list(param1 = value1, param2 = value2)
-)
+parameters <- list()
+
 modules <- list("PSP_Clean")
 objects <- list()
 inputs <- list()
