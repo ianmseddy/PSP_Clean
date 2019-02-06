@@ -93,6 +93,9 @@ Init <- function(sim) {
   pspAB$treeData$OrigPlotID1 <- paste0("AB", pspAB$treeData$OrigPlotID1)
   pspAB$plotHeaderData$OrigPlotID1 <- paste0("AB", pspAB$plotHeaderData$OrigPlotID1)
 
+  pspBC$treeData$OrigPlotID1 <- paste0("BC", pspBC$treeData$OrigPlotID1)
+  pspBC$plotHeaderData$OrigPlotID1 <- paste0("BC", pspBC$plotHeaderData$OrigPlotID1)
+
   pspSK$treeData$OrigPlotID1 <- paste0("SK", pspSK$treeData$OrigPlotID1)
   pspSK$plotHeaderData$OrigPlotID1 <- paste0("SK", pspSK$plotHeaderData$OrigPlotID1)
 
@@ -119,7 +122,19 @@ Init <- function(sim) {
 
   sim$PSPgis <- geoCleanPSP(Locations = sim$PSPplot)
 
+  #Some plots are dropped because of crappy locational data.
+  #Exclude measure/plot data with incorrect GIS
+  sim$PSPmeasure <- sim$PSPmeasure[sim$PSPmeasure$MeasureID %in% sim$PSPgis$MeasureID]
+  #Above method drops 4 NFI duplicates that weren't removed using 'on = "MeasureID"'
+  sim$PSPplot <- sim$PSPplot[sim$PSPplot$MeasureID %in% sim$PSPgis$MeasureID]
+  #Get unique GIS
+  sim$PSPgis <- unique.data.frame(sim$PSPgis[, "OrigPlotID1"])
+  #PSPgis now joins with PSPplot by OrigPlotID1. PSPplot joins with PSPmeasure by MeasureID.
+  #MeasureID in plot incorporated 'stand' (present in some PSP), which is why PSPmeasure
+  #does not join PSPplot by the more obvious 'OrigPlotID1' variable.
+  #This is confusing and seems intuitively wrong, but it works.
 
+  #In case you want a KML or shapefile
   # st_write(sim$PSPgis,
   #          dsn = file.path(outputPath(sim), "allLocationsWGS.kml"),
   #          driver = "KML")
@@ -127,8 +142,7 @@ Init <- function(sim) {
   return(invisible(sim))
 }
 
-geoCleanPSP <- function(inTree, Locations) {
-
+geoCleanPSP <- function(Locations) {
   #Seperate those using UTM
   LocationsUTM <- Locations[is.na(Longitude)| Longitude == 0,]
   LocationsWGS <- Locations[!is.na(Longitude) & Longitude != 0,]
