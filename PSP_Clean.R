@@ -207,7 +207,7 @@ geoCleanPSP <- function(Locations) {
     pspBCRaw <- Cache(prepInputs, targetFile = file.path(dPath, "BC_PSP.RData"),
                             url = extractURL(objectName = "pspBCRaw"),
                             destinationPath = dPath,
-                            fun = load, 
+                            fun = load,
                             overwrite = TRUE)
     sim$pspBCRaw <- pspBCRaw
   }
@@ -227,9 +227,9 @@ geoCleanPSP <- function(Locations) {
    tspSKMisticRaw <- prepInputs(targetFile = file.path(dPath, "SK_TSP_Mistic.RData"),
                                   url = extractURL(objectName = "tspSKMisticRaw"),
                                   destinationPath = dPath,
-                                  fun = load, 
+                                  fun = load,
                                   overwrite = TRUE)
-   
+
    sim$tspSKMisticRaw <- tspSKMisticRaw
   }
 
@@ -240,7 +240,7 @@ geoCleanPSP <- function(Locations) {
                                      destinationPath = dPath,
                                      fun = read.csv,
                                      overwrite = TRUE)
-    
+
     sim$pspNFILocationRaw <- data.table(pspNFILocationRaw)
   }
 
@@ -251,7 +251,7 @@ geoCleanPSP <- function(Locations) {
                                    destinationPath = dPath,
                                    fun = read.csv,
                                    overwrite = TRUE)
-    
+
     sim$pspNFIHeaderRaw <- data.table(pspNFIHeaderRaw)
   }
 
@@ -262,7 +262,7 @@ geoCleanPSP <- function(Locations) {
                                  destinationPath = dPath,
                                  fun = read.csv,
                                  overwrite = TRUE)
-    
+
     sim$pspNFITreeRaw <- data.table(pspNFITreeRaw)
   }
 

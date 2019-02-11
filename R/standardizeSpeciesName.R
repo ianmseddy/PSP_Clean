@@ -1,46 +1,5 @@
-################################################################################
-#' Standardize species name from different forest inventory data, this function to make all
-#' the species compatible to biomassCalculation function
-#'
-#'
-#' @param speciesTable  data table. It must at least have one column species
-#'
-#'
-#' @param forestInventorySource,  Character string. Give the forest inventory data source
-#'        Currently support MBPSP, MBTSP, ABPSP, BCPSP, SKPSP, SKTSP and NFIPSP
-#'
-#'
-#' @return  a data tables, the first one contains successfully standardized species.
-#'          the newSpeciesName is the standardized name, unknown means the species in
-#'          the original species table can not be found according to manual
-#'
-#' @importFrom data.table ':='
-#'
-#' @note no note
-#'
-#' @seealso no
-#'
-#' @include
-#' @export
-#' @docType methods
-#' @rdname standardizeSpeciesName
-#'
-#' @author Yong Luo
-#'
-#' @examples
-#' \dontrun{
-#'
-#' }
-setGeneric("standardizeSpeciesName", function(speciesTable, forestInventorySource) {
-  standardGeneric("standardizeSpeciesName")
-})
-#' @export
-#' @rdname standardizeSpeciesName
-setMethod(
-  "standardizeSpeciesName",
-  signature = c(speciesTable = "data.table",
-                forestInventorySource = "character"),
-  definition = function(speciesTable, forestInventorySource) {
+standardizeSpeciesNames <- function(speciesTable, forestInventorySource) {
+
     if(forestInventorySource == "MBPSP" | forestInventorySource == "MBTSP"){
       speciesTable[Species == "AE" | Species == "E" | Species == "WE",
                    newSpeciesName := "white elm"] # assume WE is white elm in MB PSP
@@ -277,4 +236,4 @@ setMethod(
     }
     speciesTable[is.na(newSpeciesName), newSpeciesName := "unknown"]
     return(speciesTable)
-  })
+  }

@@ -52,8 +52,83 @@ mySim <- simInit(times = times, params = parameters, modules = modules,
 mySimOut <- spades(mySim)
 ```
 
-```{r}
-#Get climate Data
+```{r explorig elevation}
+library(raster)
+library(sp)
+#Prep climate data
+  #create a csv that is ready to be input into climateNA. The GIS data are not unique to location (this is ) 
+
+coords <- sf::st_coordinates(mySimOut$PSPgis)
+climateNAdat <- data.frame("ID1" = mySimOut$PSPgis$OrigPlotID1, "ID2" = ".", "lat" = coords[,2], 
+                           "long" = coords[,1], "el" = ".")
+write.csv(climateNAdat, file.path(paths$outputPath, "climateNA_PSP.csv"), row.names = FALSE)
+#ClimateNA does not need elevation, but the column must be supplied as "."
+
+# This dem is 30 arc-seconds, available from USGS for all of NA
+# Will compare climateNA results with no elevation with those of Hydro1 elevation
+# Will take whatever is closest to the value produced using PSP elevation (which is absent for some plots)
+# Alberta has elevation for some 95% of plots (unsure if other 5% is cleaned anyway)
+# BC does not appear to have elevation (!)
+# Sask does not have elevation
+# NFI has elevation and climate data for comparison
+elevation <- raster("C:/Ian/Data/Elevation/Hydro1km_Canada.tif")
+temp <- sf::st_transform(x = mySimOut$PSPgis, crs = as.character(elevation@crs))
+el <- raster::extract(elevation, y = temp, method = "simple")
+climateNAel <- climateNAdat
+climateNAel$el <- el
+write.csv(climateNAel, file.path(paths$outputPath, "climateNA_PSPel.csv"), row.names = FALSE)
+
+#Some time later... 
+climateElev <- read.csv("outputs/climateNA_PSPel_1920-2017YT.csv")
+# climate <- read.csv("outputs/climateNA_PSP_1920-2017YT.csv")
+
+#Okay there is actually a big difference if you supply elevation. Elevation made it cooler and higher CMD. 
+#After comparing plots in Alberta that had elevation recorded with the output of climateNA run using the 
+#DEM elevation and using no elevation, it is clear that the DEM elevation produced more accurate results.
+#Furthermore, the DEM produced climatic values that were fairly close to the original. The mean difference 
+# was 0.003 degrees for MAT (across all observations and sites), and 0.11 for CMD
+#compared to -1.24 degrees and 160 CMD for a run with no elevation
+
+#Need to find plots with elevation recorded - put browser in AlbertaPSPclean.r, edit it
+# Alberta <- read.csv("C:/Ian/PracticeDirectory/AlbertaPSP_elev.csv")
+# AlbertaClean <- grep(mySimOut$PSPplot$MeasureID, pattern = "^AB") %>%
+#   mySimOut$PSPplot[.,]
+# Alberta <- Alberta[Alberta$MeasureID %in% AlbertaClean$MeasureID,]
+# Alberta$OrigPlotID1 <- paste0("AB", Alberta$OrigPlotID1)
+# #Alberta now has the same measureIDs as cleaned data, with added elevation
+# #Must still run Alberta, obviously
+# gisAB <- grep(climateNAel$ID1, pattern = "^AB") %>%
+#   climateNAel[.,]
+# 
+# #Must combined gisAB with Alberta
+# Alberta <- data.frame("ID1" = Alberta$OrigPlotID1, "ID2" = ".", "lat" = Alberta$Latitude, "long" = Alberta$Longitude,
+#                        "el" = Alberta$Elevation)
+# Alberta <- Alberta[!duplicated(Alberta),]
+# write.csv(Alberta, "C:/Ian/PracticeDirectory/AlbertaPSP_trueElev.csv", row.names = FALSE)
+
+#Now I have run climateNA with the Alberta plots with the proper elevation. Time to see which is closer
+# Alberta_truth <- read.csv(file.path("outputs/AlbertaPSP_trueElev_1920-2017YT.csv"))
+# Alberta_none <- grep(climate$ID1, pattern = "^AB") %>%
+#   climate[.,]
+# Alberta_elev <- grep(climateElev$ID1, pattern = "^AB") %>%
+#   climateElev[.,]
+# par(mfrow =c(2,2))
+# hist(Alberta_truth$MAT - Alberta_none$MAT, 
+#      xlab = "Diff. in MAT between true elevation and no elevation",
+#      main = "MAT")
+# hist(Alberta_truth$MAT - Alberta_elev$MAT, 
+#      xlab = "Diff. in MAT between true elevation and DEM elevation",
+#      main = "MAT")
+# 
+# hist(Alberta_truth$CMD - Alberta_none$CMD, 
+#      xlab = "Diff. in CMD between true elevation and no elevation",
+#      main = "CMD")
+# hist(Alberta_truth$CMD - Alberta_elev$CMD, 
+#      xlab = "Diff. in CMD between true elevation and DEM elevation",
+#      main = "CMD")
+
+
+
 ```
 
 # Events
