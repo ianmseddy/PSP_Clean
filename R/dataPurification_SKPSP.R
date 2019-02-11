@@ -87,53 +87,24 @@ dataPurification_SKPSP <- function(SADataRaw,
   #     Snow 6
   #     Other Trees 7
   #     Hail or Ice Storm 8
-  treeData <- treeData[MORTALITY == 0 |
-                         is.na(MORTALITY), ]
+  treeData <- treeData[MORTALITY == 0 | is.na(MORTALITY), ]
   # check the trees with both status and mortality are NA
   # unique(treeDataRaw[is.na(TREE_STATUS) & is.na(MORTALITY), ]$CONDITIONCODE1)
   # NULL
   treeData <- treeData[!is.na(DBH) & DBH != 0, ]
   treeData <-
     treeData[, .(PLOT_ID, OrigPlotID2 = NA, YEAR, TREE_NO, SPECIES,  DBH, HEIGHT)]
-  names(treeData) <- c(
-      "OrigPlotID1",
-      "OrigPlotID2",
-      "MeasureYear",
-      "TreeNumber",
-      "Species",
-      "DBH",
-      "Height"
-    )
+  names(treeData) <- c("OrigPlotID1", "OrigPlotID2", "MeasureYear", "TreeNumber", "Species", "DBH", "Height")
   setnames(headData, "PLOT_ID", "OrigPlotID1")
-  measureidtable <-
-    unique(treeData[, .(OrigPlotID1, MeasureYear)], by = c("OrigPlotID1", "MeasureYear"))
+  measureidtable <- unique(treeData[, .(OrigPlotID1, MeasureYear)], by = c("OrigPlotID1", "MeasureYear"))
   measureidtable[, MeasureID := paste("SKPSP_", row.names(measureidtable), sep = "")]
-  measureidtable <-
-    measureidtable[, .(MeasureID, OrigPlotID1, MeasureYear)]
+  measureidtable <- measureidtable[, .(MeasureID, OrigPlotID1, MeasureYear)]
   treeData <- setkey(measureidtable, OrigPlotID1, MeasureYear)[setkey(treeData, OrigPlotID1, MeasureYear),nomatch = 0]
-  treeData <- treeData[, .(MeasureID,
-                 OrigPlotID1,
-                 OrigPlotID2,
-                 MeasureYear,
-                 TreeNumber,
-                 Species,
-                 DBH,
-                 Height)]
-  headData <-
-    setkey(measureidtable, OrigPlotID1)[setkey(headData, OrigPlotID1),
-                                        nomatch = 0]
-  headData <- headData[, .(
-      MeasureID,
-      OrigPlotID1,
-      MeasureYear,
-      Longitude = NA,
-      Latitude = NA,
-      Zone,
-      Easting,
-      Northing,
-      PlotSize,
-      baseYear,
-      baseSA
-    )]
+  treeData <- treeData[, .(MeasureID, OrigPlotID1, OrigPlotID2, MeasureYear, TreeNumber, Species, DBH, Height)]
+  headData <- setkey(measureidtable, OrigPlotID1)[setkey(headData, OrigPlotID1), nomatch = 0]
+  headData <- headData[, .(MeasureID, OrigPlotID1, MeasureYear, Longitude = NA,
+      Latitude = NA, Zone, Easting, Northing, PlotSize, baseYear, baseSA)]
+
+  treeData <- standardizeSpeciesNames(treeData, forestInventorySource = "SKPSP") #Need to add to pemisc
   return(list(plotHeaderData = headData, treeData = treeData))
 }

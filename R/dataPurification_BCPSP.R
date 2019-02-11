@@ -9,13 +9,6 @@ dataPurification_BCPSP = function(treeDataRaw, plotHeaderDataRaw) {
             standorigtimes = length(unique(stnd_org)),
             treatmenttimes = length(unique(treatment))),
       by = SAMP_ID]
-    # unique(headDataRaw$utmtimes)#1
-    # unique(headDataRaw$eastingtimes)#1
-    # unique(headDataRaw$northingtimes)# 1
-    # unique(headDataRaw$SAtimes) # no NA
-    # unique(headDataRaw$plotsizetimes)#1
-    # unique(headDataRaw$standorigtimes) # 1
-
 
     # select the natural originated and untreated
     headerData <- headerData[stnd_org == "N" | stnd_org == "F",]
@@ -64,5 +57,7 @@ dataPurification_BCPSP = function(treeDataRaw, plotHeaderDataRaw) {
                                 baseSA)]
     treeData <- setkey(measreidtable, OrigPlotID1, OrigPlotID2, MeasureYear)[setkey(treeData, OrigPlotID1, OrigPlotID2, MeasureYear),
                                                                              nomatch = 0]
+
+    treeData <- standardizeSpeciesNames(treeData, forestInventorySource = "BCPSP") #Need to add to pemisc
     return(list(plotHeaderData = headerData, treeData = treeData))
 }

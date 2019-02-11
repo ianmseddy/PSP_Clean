@@ -29,5 +29,8 @@ dataPurification_NFIPSP <- function(lgptreeRaw,
                            TreeNumber, Genus, Species, DBH, Height)]
   lgpHeader <- lgpHeader[, .(MeasureID, OrigPlotID1, MeasureYear, Longitude, Latitude, Zone = NA,
                              Easting = NA, Northing = NA, PlotSize, baseYear, baseSA)]
+
+  treeData <- standardizeSpeciesNames(treeData, forestInventorySource = "NFIPSP") #Need to add to pemisc
+
   return(list(plotHeaderData = lgpHeader, treeData = treeData))
 }

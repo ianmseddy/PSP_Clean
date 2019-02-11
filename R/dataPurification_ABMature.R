@@ -1,5 +1,4 @@
 dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
-
   setnames(
       treeDataRaw,
       c("Groupnumber", "Plotnumber", "Treenumber"),
@@ -92,6 +91,8 @@ dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
                                  Northing = as.numeric(Northing), PlotSize = PlotSize / 10000, baseYear, baseSA)]
     treeData[, MeasureID := paste("ABPSPMature_", MeasureID, sep = "")]
     setnames(treeData, c("GroupNumber", "PlotNumber"), c("OrigPlotID1", "OrigPlotID2"))
+
+    treeData <- standardizeSpeciesNames(treeData, forestInventorySource = "ABPSP") #Need to add to pemisc
 
     return(list(plotHeaderData = headerData,
                 treeData = treeData))

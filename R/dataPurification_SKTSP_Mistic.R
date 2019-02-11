@@ -29,5 +29,7 @@ dataPurification_SKTSP_Mistic <- function(compiledPlotData,
                            Latitude = NA, Zone, Easting = Easting * 10000, Northing = Northing * 10000,
                            PlotSize, baseYear = MeasureYear, baseSA = SA)]
 
+  treeData <- standardizeSpeciesNames(treeData, forestInventorySource = "SKTSP") #Need to add to pemisc
+
   return(list(plotHeaderData = headData, treeData = treeData))
 }
