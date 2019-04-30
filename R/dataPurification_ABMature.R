@@ -98,13 +98,11 @@ dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
     #OrigPlotID1 211 has new numbers between 1976-1986
     headerData[OrigPlotID1 == 211, baseYear := 1986]
     headerData <- headerData[!OrigPlotID1 == 211 | MeasureYear > 1985]
-    treeData <- treeData[OrigPlotID1 == 211, baseYear := 1986]
     treeData <- treeData[!OrigPlotID1 == 211 | MeasureYear > 1985]
 
     #OrigPlotID 49 has new numbers between 1961-1968
     headerData[OrigPlotID1 == 49, baseYear := 1968]
     headerData <- headerData[!OrigPlotID1 == 49 | MeasureYear > 1967]
-    treeData <- treeData[OrigPlotID1 == 49, baseYear := 1968]
     treeData <- treeData[!OrigPlotID1 == 49 | MeasureYear > 1967]
 
     return(list(plotHeaderData = headerData,

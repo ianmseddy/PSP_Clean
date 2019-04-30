@@ -105,19 +105,19 @@ Init <- function(sim) {
   tspSKMistic$treeData$OrigPlotID1 <- paste0("SKMistic", tspSKMistic$treeData$OrigPlotID1)
   tspSKMistic$plotHeaderData$OrigPlotID1 <- paste0("SKMistic", tspSKMistic$plotHeaderData$OrigPlotID1)
 
-  sim$PSPmeasure <- data.table::rbindlist(list(pspAB$treeData,
-                                       pspBC$treeData,
-                                       pspSK$treeData,
-                                       tspSKMistic$treeData,
-                                       pspNFI$treeData),
-                                  use.names = TRUE)
+  sim$PSPmeasure <- rbindlist(list(pspAB$treeData,
+                                   pspBC$treeData,
+                                   pspSK$treeData,
+                                   tspSKMistic$treeData,
+                                   pspNFI$treeData),
+                              use.names = TRUE)
 
-  sim$PSPplot <- data.table::rbindlist(list(pspAB$plotHeaderData,
-                                             pspBC$plotHeaderData,
-                                             pspSK$plotHeaderData,
-                                             tspSKMistic$plotHeaderData,
-                                             pspNFI$plotHeaderData),
-                                        use.names = TRUE)
+  sim$PSPplot <- rbindlist(list(pspAB$plotHeaderData,
+                                pspBC$plotHeaderData,
+                                pspSK$plotHeaderData,
+                                tspSKMistic$plotHeaderData,
+                                pspNFI$plotHeaderData),
+                           use.names = TRUE)
 
 
   sim$PSPgis <- geoCleanPSP(Locations = sim$PSPplot)
