@@ -53,10 +53,15 @@ mySimOut <- spades(mySim)
 ```
 
 ```{r explorig elevation}
+#This is some diagnostic work to assess whether a DEM will be an accurate stand-in for elevation at PSP plots
+#Elevation is needed to get climate conditions at each site from ClimateNA, but only a few PSP sites have elevation
+#Comparisons running ClimateNA with true elevation from PSPs and with DEM elevation show the DEM is acceptable and 
+#far superior to running with no elevation data at all. 
+
 library(raster)
 library(sp)
 #Prep climate data
-  #create a csv that is ready to be input into climateNA. The GIS data are not unique to location (this is ) 
+#create a csv that is ready to be input into climateNA. The GIS data are not unique to location (this is ) 
 
 coords <- sf::st_coordinates(mySimOut$PSPgis)
 climateNAdat <- data.frame("ID1" = mySimOut$PSPgis$OrigPlotID1, "ID2" = ".", "lat" = coords[,2], 

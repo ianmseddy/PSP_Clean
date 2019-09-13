@@ -1,4 +1,4 @@
-dataPurification_SKTSP_Mistic <- function(compiledPlotData,
+dataPurification_SKTSP_Mistik <- function(compiledPlotData,
                                           compiledTreeData) {
   options(scipen = 999) # avoid scientific notation
 

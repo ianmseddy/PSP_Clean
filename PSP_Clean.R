@@ -25,7 +25,7 @@ defineModule(sim, list(
                  sourceURL = "https://drive.google.com/open?id=1X5bbU5oBIcSWpl-1WXGszHhz1ltrDTx2"),
     expectsInput(objectName = "pspSKRaw", objectClass = "list", desc = "SK PSP data",
                  sourceURL = "https://drive.google.com/open?id=1yvOzfNqZ28oLYKTfdDb8-Wip7jBPtCz6"),
-    expectsInput(objectName = "tspSKMisticRaw", objectClass = "list", desc = "temporary sampling plots from Saskatchewan?",
+    expectsInput(objectName = "tspSKMistikRaw", objectClass = "list", desc = "temporary sampling plots from Saskatchewan?",
                  sourceURL = "https://drive.google.com/open?id=1PCn0DpGwsXBhquW3jOaqks1QC9teo_Xx"),
     # expectsInput(objectName = "tspSKPPPARaw", objectClass = "list", desc = "temporary sampling plots from Saskatchewan?",
     #              sourceURL = ) #This data exists in Yong's script but is not in the google drive
@@ -75,12 +75,12 @@ Init <- function(sim) {
   pspSK <- dataPurification_SKPSP(SADataRaw = sim$pspSKRaw$plotheader1, plotHeaderRaw = sim$pspSKRaw$plotheader3,
                                   measureHeaderRaw = sim$pspSKRaw$plotheader2, treeDataRaw= sim$pspSKRaw$treedata)
 
-  #Saskatchewan Mistic
-  tspSKMistic <- dataPurification_SKTSP_Mistic(compiledPlotData = sim$tspSKMisticRaw$plotheader,
-                                               compiledTreeData = sim$tspSKMisticRaw$treedata)
+  #Saskatchewan Mistik
+  tspSKMistik <- dataPurification_SKTSP_Mistik(compiledPlotData = sim$tspSKMistikRaw$plotheader,
+                                               compiledTreeData = sim$tspSKMistikRaw$treedata)
   #Yong's original script did not remove treeNumber 0 (with 0 measurements).
 
-  tspSKMistic$treeData <- tspSKMistic$treeData[tspSKMistic$treeData$TreeNumber != 0,]
+  tspSKMistik$treeData <- tspSKMistik$treeData[tspSKMistik$treeData$TreeNumber != 0,]
 
   #NFI
   pspNFI <- dataPurification_NFIPSP(lgptreeRaw = sim$pspNFITreeRaw, lgpHeaderRaw = sim$pspNFIHeaderRaw,
@@ -102,20 +102,20 @@ Init <- function(sim) {
   pspNFI$treeData$OrigPlotID1 <- paste0("NFI", pspNFI$treeData$OrigPlotID1)
   pspNFI$plotHeaderData$OrigPlotID1 <- paste0("NFI", pspNFI$plotHeaderData$OrigPlotID1)
 
-  tspSKMistic$treeData$OrigPlotID1 <- paste0("SKMistic", tspSKMistic$treeData$OrigPlotID1)
-  tspSKMistic$plotHeaderData$OrigPlotID1 <- paste0("SKMistic", tspSKMistic$plotHeaderData$OrigPlotID1)
+  tspSKMistik$treeData$OrigPlotID1 <- paste0("SKMistik", tspSKMistik$treeData$OrigPlotID1)
+  tspSKMistik$plotHeaderData$OrigPlotID1 <- paste0("SKMistik", tspSKMistik$plotHeaderData$OrigPlotID1)
 
   sim$PSPmeasure <- rbindlist(list(pspAB$treeData,
                                    pspBC$treeData,
                                    pspSK$treeData,
-                                   tspSKMistic$treeData,
+                                   tspSKMistik$treeData,
                                    pspNFI$treeData),
                               use.names = TRUE)
 
   sim$PSPplot <- rbindlist(list(pspAB$plotHeaderData,
                                 pspBC$plotHeaderData,
                                 pspSK$plotHeaderData,
-                                tspSKMistic$plotHeaderData,
+                                tspSKMistik$plotHeaderData,
                                 pspNFI$plotHeaderData),
                            use.names = TRUE)
 
@@ -149,7 +149,6 @@ geoCleanPSP <- function(Locations) {
 
   # a few points in UTM 11 are missing northing digits. Blame Alberta?
   LocationsUTM <- LocationsUTM[nchar(LocationsUTM$Northing) > 3,] #better way to fix?
-
   LocationsWGS <- st_as_sf(x = LocationsWGS,
                               coords = c("Longitude", "Latitude"),
                               crs = "+proj=longlat +datum=WGS84")
@@ -222,15 +221,15 @@ geoCleanPSP <- function(Locations) {
     sim$pspSKRaw <- pspSKRaw
   }
 
-  if (!suppliedElsewhere("tspSKMisticRaw", sim)) {
+  if (!suppliedElsewhere("tspSKMistikRaw", sim)) {
 
-   tspSKMisticRaw <- prepInputs(targetFile = file.path(dPath, "SK_TSP_Mistic.RData"),
-                                  url = extractURL(objectName = "tspSKMisticRaw"),
+   tspSKMistikRaw <- prepInputs(targetFile = file.path(dPath, "SK_TSP_Mistik.RData"),
+                                  url = extractURL(objectName = "tspSKMistikRaw"),
                                   destinationPath = dPath,
                                   fun = 'load',
                                   overwrite = TRUE)
 
-   sim$tspSKMisticRaw <- tspSKMisticRaw
+   sim$tspSKMistikRaw <- tspSKMistikRaw
   }
 
   if (!suppliedElsewhere("pspNFILocationRaw", sim)) {
