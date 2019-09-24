@@ -44,7 +44,7 @@ standardizeSpeciesNames <- function(speciesTable, forestInventorySource) {
       speciesTable[Species == "E", newSpeciesName := "white birch"]
       # E for birch in original doc. assume S is white birch
       # speciesTable[Species == "XC", newSpeciesName := "unknow conifer"]
-      speciesTable[Species == "BL", newSpeciesName := "alpine fir"]
+      speciesTable[Species == "BL", newSpeciesName := "subalpine fir"]
       speciesTable[Species == "EA", newSpeciesName := "white birch"]
       # EA is alaka paper birch, assume it is white birch here
       speciesTable[Species == "AC", newSpeciesName := "balsam poplar"]
@@ -86,7 +86,7 @@ standardizeSpeciesNames <- function(speciesTable, forestInventorySource) {
       # speciesTable[Species == "  ", newSpeciesName := "unknown"]
       speciesTable[Species == "AW", newSpeciesName := "trembling aspen"]
       speciesTable[Species == "BW", newSpeciesName := "white birch"]
-      speciesTable[Species == "FA", newSpeciesName := "alpine fir"]
+      speciesTable[Species == "FA", newSpeciesName := "subalpine fir"]
       speciesTable[Species == "FB", newSpeciesName := "balsam fir"]
       speciesTable[Species == "FD", newSpeciesName := "douglas-fir"]
       speciesTable[Species == "LA", newSpeciesName := "alpine larch"]
