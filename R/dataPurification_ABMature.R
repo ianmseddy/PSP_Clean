@@ -1,4 +1,5 @@
 dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
+
   setnames(
       treeDataRaw,
       c("Groupnumber", "Plotnumber", "Treenumber"),
@@ -88,7 +89,7 @@ dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
 
 
     headerData <- headerData[, .(MeasureID, OrigPlotID1, MeasureYear, Longitude, Latitude, Zone, Easting,
-                                 Northing = as.numeric(Northing), PlotSize = PlotSize / 10000, baseYear, baseSA)]
+                                 Northing = as.numeric(Northing), Elevation, PlotSize = PlotSize / 10000, baseYear, baseSA)]
     treeData[, MeasureID := paste("ABPSPMature_", MeasureID, sep = "")]
     setnames(treeData, c("GroupNumber", "PlotNumber"), c("OrigPlotID1", "OrigPlotID2"))
 

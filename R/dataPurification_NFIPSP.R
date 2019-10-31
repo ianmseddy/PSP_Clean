@@ -8,9 +8,8 @@ dataPurification_NFIPSP <- function(lgptreeRaw,
     lgpHeaderRaw[nfi_plot %in% unique(lgptreeRaw$nfi_plot), ][, .(nfi_plot, year, meas_plot_size, site_age)]
   approxLocation <-
     approxLocation[, .(nfi_plot, longitude, latitude, elevation)] %>%
-    unique(, by = "nfi_plot")
-  lgpHeader <-
-    setkey(lgpHeader, nfi_plot)[setkey(approxLocation, nfi_plot), nomatch = 0]
+    unique(., by = "nfi_plot")
+  lgpHeader <- setkey(lgpHeader, nfi_plot)[setkey(approxLocation, nfi_plot), nomatch = 0]
   # remove the plots without SA and location infor
   lgpHeader <- lgpHeader[!is.na(site_age), ][!is.na(longitude), ][!is.na(latitude), ]
   treeData <- lgptreeRaw[, .(nfi_plot, year, tree_num, lgtree_genus, lgtree_species,
@@ -28,7 +27,7 @@ dataPurification_NFIPSP <- function(lgptreeRaw,
   treeData <- treeData[, .(MeasureID, OrigPlotID1, OrigPlotID2 = NA, MeasureYear,
                            TreeNumber, Genus, Species, DBH, Height)]
   lgpHeader <- lgpHeader[, .(MeasureID, OrigPlotID1, MeasureYear, Longitude, Latitude, Zone = NA,
-                             Easting = NA, Northing = NA, PlotSize, baseYear, baseSA)]
+                             Easting = NA, Northing = NA, Elevation, PlotSize, baseYear, baseSA)]
 
   treeData <- standardizeSpeciesNames(treeData, forestInventorySource = "NFIPSP") #Need to add to pemisc
 

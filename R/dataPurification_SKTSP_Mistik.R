@@ -17,7 +17,7 @@ dataPurification_SKTSP_Mistik <- function(compiledPlotData,
   treeData <- treeData[CONDCOD1 != "DE", ]
   treeData <- treeData[CONDCOD2 != "DE", ]
   treeData <- treeData[CONDCOD3 != "DE", ]
-  set(treeData, , c("CONDCOD1", "CONDCOD2", "CONDCOD3"), NULL)
+  set(treeData, NULL, c("CONDCOD1", "CONDCOD2", "CONDCOD3"), NULL)
   treeData <- setkey(headData[, .(MeasureID, ID_FOR, MeasureYear)],
                      ID_FOR)[setkey(treeData, ID_FOR), nomatch = 0]
 

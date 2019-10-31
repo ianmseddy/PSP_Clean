@@ -117,7 +117,7 @@ Init <- function(sim) {
                                 pspSK$plotHeaderData,
                                 tspSKMistik$plotHeaderData,
                                 pspNFI$plotHeaderData),
-                           use.names = TRUE)
+                           use.names = TRUE, fill = TRUE)
 
 
   sim$PSPgis <- geoCleanPSP(Locations = sim$PSPplot)
