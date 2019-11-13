@@ -182,52 +182,54 @@ geoCleanPSP <- function(Locations) {
   if (!suppliedElsewhere("pspABMatureRaw", sim)) {
 
     pspABMatureRaw <- Cache(prepInputs, targetFile = file.path(dPath, "ABMatureTreeData.csv"),
-                              url = extractURL(objectName = "pspABMatureRaw"),
-                              fun = "read.csv",
-                              destinationPath = dPath,
-                              filename2 = "ABMatureTreeData.csv")
+                            url = extractURL(objectName = "pspABMatureRaw"),
+                            fun = "read.csv",
+                            destinationPath = dPath,
+                            filename2 = "ABMatureTreeData.csv")
     sim$pspABMatureRaw <- data.table(pspABMatureRaw)
 
   }
 
   if (!suppliedElsewhere("pspLocationAB", sim)) {
 
-    pspLocationABRaw <- Cache(prepInputs, targetFile = file.path(dPath, "plotLocation.csv"),
-                                     url = extractURL(objectName = "pspLocationABRaw"),
-                                     destinationPath = dPath,
-                                     fun = 'read.csv',
-                                     filename2 = "plotLocationAB.csv",
-                                     overwrite = TRUE)
+    pspLocationABRaw <- prepInputs(targetFile = file.path(dPath, "plotLocation.csv"),
+                                   url = extractURL(objectName = "pspLocationABRaw"),
+                                   destinationPath = dPath,
+                                   fun = 'read.csv',
+                                   filename2 = "plotLocationAB.csv",
+                                   useCache = TRUE,
+                                   userTags = c(currentModule(sim), "pspLocationABRaw"))
     sim$pspLocationABRaw <- data.table(pspLocationABRaw)
   }
 
   if (!suppliedElsewhere("pspBCRaw", sim)) {
 
-    pspBCRaw <- Cache(prepInputs, targetFile = file.path(dPath, "BC_PSP.RData"),
-                            url = extractURL(objectName = "pspBCRaw"),
-                            destinationPath = dPath,
-                            fun = 'load',
-                            overwrite = TRUE)
+    pspBCRaw <- prepInputs(targetFile = file.path(dPath, "BC_PSP.RData"),
+                           url = extractURL(objectName = "pspBCRaw"),
+                           destinationPath = dPath,
+                           fun = 'readRDS',
+                           useCache = TRUE,
+                           userTags = c(currentModule(sim), "pspBCRaw"))
     sim$pspBCRaw <- pspBCRaw
   }
 
   if (!suppliedElsewhere("pspSKRaw", sim)) {
 
     pspSKRaw <- prepInputs(targetFile = file.path(dPath, "SKPSP.RData"),
-                            url = extractURL(objectName = "pspSKRaw"),
-                            destinationPath = dPath,
-                            fun = "load",
-                            overwrite = TRUE)
+                           url = extractURL(objectName = "pspSKRaw"),
+                           destinationPath = dPath,
+                           fun = "load",
+                           overwrite = TRUE)
     sim$pspSKRaw <- pspSKRaw
   }
 
   if (!suppliedElsewhere("tspSKMistikRaw", sim)) {
 
-   tspSKMistikRaw <- prepInputs(targetFile = file.path(dPath, "SK_TSP_Mistik.RData"),
-                                  url = extractURL(objectName = "tspSKMistikRaw"),
-                                  destinationPath = dPath,
-                                  fun = 'load',
-                                  overwrite = TRUE)
+    tspSKMistikRaw <- prepInputs(targetFile = file.path(dPath, "SK_TSP_Mistik.RData"),
+                                 url = extractURL(objectName = "tspSKMistikRaw"),
+                                 destinationPath = dPath,
+                                 fun = 'load',
+                                 overwrite = TRUE)
 
    sim$tspSKMistikRaw <- tspSKMistikRaw
   }
@@ -235,10 +237,11 @@ geoCleanPSP <- function(Locations) {
   if (!suppliedElsewhere("pspNFILocationRaw", sim)) {
 
     pspNFILocationRaw <- prepInputs(targetFile = file.path(dPath, "all_gp_climate_approx_loc.csv"),
-                                     url = extractURL(objectName = "pspNFILocationRaw"),
-                                     destinationPath = dPath,
-                                     fun = 'read.csv',
-                                     overwrite = TRUE)
+                                    url = extractURL(objectName = "pspNFILocationRaw"),
+                                    destinationPath = dPath,
+                                    fun = 'read.csv',
+                                    useCache = TRUE,
+                                    userTags = c(currentModule(sim), "pspNFILocationRaw"))
 
     sim$pspNFILocationRaw <- data.table(pspNFILocationRaw)
   }
@@ -257,10 +260,10 @@ geoCleanPSP <- function(Locations) {
   if (!suppliedElsewhere("pspNFITreeRaw", sim)) {
 
     pspNFITreeRaw <- prepInputs(targetFile = file.path(dPath, "all_gp_ltp_tree.csv"),
-                                 url = extractURL(objectName = "pspNFITreeRaw"),
-                                 destinationPath = dPath,
-                                 fun = 'read.csv',
-                                 overwrite = TRUE)
+                                url = extractURL(objectName = "pspNFITreeRaw"),
+                                destinationPath = dPath,
+                                fun = 'read.csv',
+                                overwrite = TRUE)
 
     sim$pspNFITreeRaw <- data.table(pspNFITreeRaw)
   }
