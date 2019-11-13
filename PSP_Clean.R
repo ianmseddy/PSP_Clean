@@ -22,7 +22,7 @@ defineModule(sim, list(
     expectsInput(objectName = "pspLocationABRaw", objectClass = "data.table", desc = "location of Alberta PSP",
                  sourceURL = "https://drive.google.com/open?id=11GVbtqUKQXD2dxp5Tzo_Rom2Ke3VLTjU"),
     expectsInput(objectName = "pspBCRaw", objectClass = "list", desc = "BC PSP data",
-                 sourceURL = "https://drive.google.com/open?id=1X5bbU5oBIcSWpl-1WXGszHhz1ltrDTx2"),
+                 sourceURL = "https://drive.google.com/open?id=1P6dcyqwH41-umWvfoCTNQC3BAAWdkitO"),
     expectsInput(objectName = "pspSKRaw", objectClass = "list", desc = "SK PSP data",
                  sourceURL = "https://drive.google.com/open?id=1yvOzfNqZ28oLYKTfdDb8-Wip7jBPtCz6"),
     expectsInput(objectName = "tspSKMistikRaw", objectClass = "list", desc = "temporary sampling plots from Saskatchewan?",
