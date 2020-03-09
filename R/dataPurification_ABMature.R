@@ -3,7 +3,8 @@ dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
   setnames(
       treeDataRaw,
       c("Groupnumber", "Plotnumber", "Treenumber"),
-      c("GroupNumber", "PlotNumber", "TreeNumber")
+      c("GroupNumber", "PlotNumber", "TreeNumber"), 
+      skip_absent = TRUE
     )
     treeDataRaw[, GroupNumber := as.character(GroupNumber)]
     setnames(plotHeaderDataRaw,
