@@ -181,12 +181,13 @@ geoCleanPSP <- function(Locations) {
 
   if (!suppliedElsewhere("pspABMatureRaw", sim)) {
 
-    pspABMatureRaw <- Cache(prepInputs, targetFile = file.path(dPath, "ABMatureTreeData.csv"),
+    pspABMatureRaw <- prepInputs(targetFile = file.path(dPath, "ABMatureTreeData.csv"),
                             url = extractURL(objectName = "pspABMatureRaw"),
                             fun = "read.csv",
                             destinationPath = dPath,
                             filename2 = "ABMatureTreeData.csv")
     sim$pspABMatureRaw <- data.table(pspABMatureRaw)
+
 
   }
 
