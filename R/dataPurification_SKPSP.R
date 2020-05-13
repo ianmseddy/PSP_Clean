@@ -106,5 +106,9 @@ dataPurification_SKPSP <- function(SADataRaw,
       Latitude = NA, Zone, Easting, Northing, PlotSize, baseYear, baseSA)]
 
   treeData <- standardizeSpeciesNames(treeData, forestInventorySource = "SKPSP") #Need to add to pemisc
+
+  treeData[MeasureYear == 2044, MeasureYear := 2014] #correct obvious error
+  headData[MeasureYear == 2044, MeasureYear := 2014]
+
   return(list(plotHeaderData = headData, treeData = treeData))
 }
