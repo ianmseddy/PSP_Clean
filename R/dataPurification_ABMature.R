@@ -106,7 +106,12 @@ dataPurification_ABMature <- function(treeDataRaw, plotHeaderDataRaw) {
     headerData[OrigPlotID1 == 49, baseYear := 1968]
     headerData <- headerData[!OrigPlotID1 == 49 | MeasureYear > 1967]
     treeData <- treeData[!OrigPlotID1 == 49 | MeasureYear > 1967]
+    
+    #remove bad measure
+    treeData <- treeData[!MeasureID == 'ABPSPMature_2422']
+    headerData <- headerData[!MeasureID == 'ABPSPMature_2422']
 
+    
     return(list(plotHeaderData = headerData,
                 treeData = treeData))
   }

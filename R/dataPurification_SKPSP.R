@@ -110,5 +110,9 @@ dataPurification_SKPSP <- function(SADataRaw,
   treeData[MeasureYear == 2044, MeasureYear := 2014] #correct obvious error
   headData[MeasureYear == 2044, MeasureYear := 2014]
 
+  #remove two measurements with incorrect tree numbers
+  headData <- headData[!MeasureID %in% c("SKPSP_2166", "SKPSP_2161")]
+  treeData <- treeData[!MeasureID %in% c("SKPSP_2166", "SKPSP_2161")]
+  
   return(list(plotHeaderData = headData, treeData = treeData))
 }
