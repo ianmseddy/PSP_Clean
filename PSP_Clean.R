@@ -15,7 +15,7 @@ defineModule(sim, list(
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
     defineParameter(".useCache", "logical", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
   ),
-  inputObjects = bind_rows(
+  inputObjects = bindrows(
     #expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
     expectsInput(objectName = "pspABMatureRaw", objectClass = "data.table", desc =  "Alberta PSP for mature trees only?",
                  sourceURL = "https://drive.google.com/open?id=13g6Cbtdv4x-KXo9-1ATWLpVseVipkKQp"),
@@ -36,7 +36,7 @@ defineModule(sim, list(
     expectsInput(objectName = "pspNFITreeRaw", objectClass = "data.table", desc = "",
                  sourceURL = "https://drive.google.com/open?id=1qePgxqEyG0nUtVJSrs4cuaognybKqbGE")
   ),
-  outputObjects = bind_rows(
+  outputObjects = bindrows(
     #createsOutput("objectName", "objectClass", "output object description", ...),
     createsOutput(objectName = "PSPmeasure", objectClass = "data.table", desc = "merged PSP and TSP individual measurements"),
     createsOutput(objectName = "PSPplot", objectClass = "data.table", desc = "merged PSP and TSP plot data"),
