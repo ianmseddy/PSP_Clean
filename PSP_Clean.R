@@ -30,11 +30,11 @@ defineModule(sim, list(
     # expectsInput(objectName = "tspSKPPPARaw", objectClass = "list", desc = "temporary sampling plots from Saskatchewan?",
     #              sourceURL = ) #This data exists in Yong's script but is not in the google drive
     expectsInput(objectName = "pspNFILocationRaw", objectClass = "data.table", desc = "NFI PSP sampling locations",
-                 sourceURL = "https://drive.google.com/open?id=1_mIraySUqcmT8boD5TMX7qMfRe8bQ7l6"),
+                 sourceURL = "https://drive.google.com/file/d/1S-4itShMXtwzGxjKPgsznpdTD2ydE9qn/view?usp=sharing"),
     expectsInput(objectName = "pspNFIHeaderRaw", objectClass = "data.table", desc = "NFI PSP header?",
-                 sourceURL = "https://drive.google.com/open?id=1jGk3ebWnLO_tcgeUgVVr9Mi0htd_JzhG"),
+                 sourceURL = "https://drive.google.com/file/d/1i4y1Tfi-kpa5nHnpMbUDomFJOja5uD2g/view?usp=sharing"),
     expectsInput(objectName = "pspNFITreeRaw", objectClass = "data.table", desc = "",
-                 sourceURL = "https://drive.google.com/open?id=1qePgxqEyG0nUtVJSrs4cuaognybKqbGE")
+                 sourceURL = "https://drive.google.com/file/d/1i4y1Tfi-kpa5nHnpMbUDomFJOja5uD2g/view?usp=sharing")
   ),
   outputObjects = bindrows(
     #createsOutput("objectName", "objectClass", "output object description", ...),
@@ -143,6 +143,7 @@ Init <- function(sim) {
 }
 
 geoCleanPSP <- function(Locations) {
+
   #Seperate those using UTM
   LocationsUTM <- Locations[is.na(Longitude)| Longitude == 0,]
   LocationsWGS <- Locations[!is.na(Longitude) & Longitude != 0,]
@@ -237,10 +238,11 @@ geoCleanPSP <- function(Locations) {
 
   if (!suppliedElsewhere("pspNFILocationRaw", sim)) {
 
-    pspNFILocationRaw <- prepInputs(targetFile = file.path(dPath, "all_gp_climate_approx_loc.csv"),
+    pspNFILocationRaw <- prepInputs(targetFile = file.path(dPath, "all_gp_site_info.csv"),
                                     url = extractURL(objectName = "pspNFILocationRaw"),
                                     destinationPath = dPath,
                                     fun = 'read.csv',
+                                    purge = 7,
                                     useCache = TRUE,
                                     userTags = c(currentModule(sim), "pspNFILocationRaw"))
 
@@ -253,6 +255,7 @@ geoCleanPSP <- function(Locations) {
                                    url = extractURL(objectName = "pspNFIHeaderRaw"),
                                    destinationPath = dPath,
                                    fun = 'read.csv',
+                                  purge = 7,
                                    overwrite = TRUE)
 
     sim$pspNFIHeaderRaw <- data.table(pspNFIHeaderRaw)
@@ -264,6 +267,7 @@ geoCleanPSP <- function(Locations) {
                                 url = extractURL(objectName = "pspNFITreeRaw"),
                                 destinationPath = dPath,
                                 fun = 'read.csv',
+                                purge = 7,
                                 overwrite = TRUE)
 
     sim$pspNFITreeRaw <- data.table(pspNFITreeRaw)
