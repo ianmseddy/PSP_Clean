@@ -17,10 +17,18 @@ defineModule(sim, list(
   ),
   inputObjects = bindrows(
     #expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
-    expectsInput(objectName = "pspABMatureRaw", objectClass = "data.table", desc =  "Alberta PSP for mature trees only?",
-                 sourceURL = "https://drive.google.com/open?id=13g6Cbtdv4x-KXo9-1ATWLpVseVipkKQp"),
-    expectsInput(objectName = "pspLocationABRaw", objectClass = "data.table", desc = "location of Alberta PSP",
-                 sourceURL = "https://drive.google.com/open?id=11GVbtqUKQXD2dxp5Tzo_Rom2Ke3VLTjU"),
+    expectsInput(objectName = "pspABplotMeasure", objectClass = "data.table", 
+                 desc = "PSP plot measurement data from the Government of Alberta",
+                 sourceURL = "https://drive.google.com/file/d/1qGiHEpkeSjiHR73zhmSFEFq8BO8_9GTP/view?usp=sharing"),
+    expectsInput(objectName = "pspABtreeMeasure", objectClass = "data.table", 
+                 desc = "PSP tree measurement data from the Government of Alberta",
+                 sourceURL = "https://drive.google.com/file/d/1qGiHEpkeSjiHR73zhmSFEFq8BO8_9GTP/view?usp=sharing"),
+    expectsInput(objectName = "pspABtree", objectClass = "data.table", 
+                 desc = "PSP tree data from the Government of Alberta - needed for species",
+                 sourceURL = "https://drive.google.com/file/d/1qGiHEpkeSjiHR73zhmSFEFq8BO8_9GTP/view?usp=sharing"),
+    expectsInput(objectName = "pspABplot", objectClass = "data.table", 
+                 desc = "PSP plot data from Government of Alberta - needed for locational attributes",
+                 sourceURL = "https://drive.google.com/file/d/1qGiHEpkeSjiHR73zhmSFEFq8BO8_9GTP/view?usp=sharing"),
     expectsInput(objectName = "pspBCRaw", objectClass = "list", desc = "BC PSP data",
                  sourceURL = "https://drive.google.com/open?id=1P6dcyqwH41-umWvfoCTNQC3BAAWdkitO"),
     expectsInput(objectName = "pspSKRaw", objectClass = "list", desc = "SK PSP data",
@@ -66,7 +74,10 @@ doEvent.PSP_Clean = function(sim, eventTime, eventType) {
 Init <- function(sim) {
 
   #Alberta
-  pspAB <- dataPurification_ABMature(treeDataRaw = sim$pspABMatureRaw, plotHeaderDataRaw = sim$pspLocationABRaw)
+  pspAB <- dataPurification_ABPSP(treeMeasure = sim$pspABtreeMeasure, 
+                                  plotMeasure = sim$pspABplotMeasure,
+                                  tree = sim$pspABtree,
+                                  plot = sim$pspABplot)
 
   #BC
   pspBC<- dataPurification_BCPSP(treeDataRaw = sim$pspBCRaw$treedata, plotHeaderDataRaw = sim$pspBCRaw$plotheader)
@@ -86,6 +97,7 @@ Init <- function(sim) {
   pspNFI <- dataPurification_NFIPSP(lgptreeRaw = sim$pspNFITreeRaw, lgpHeaderRaw = sim$pspNFIHeaderRaw,
                                     approxLocation = sim$pspNFILocationRaw)
 
+  pspNFI$treeData[, Species := paste0(Genus, "_", Species)]
   pspNFI$treeData[,Genus := NULL] #This column is not in any of the other PSP datasets
 
   #Rename keys before combining PSP datasets (BC is already unique with BC identified in value)
@@ -104,13 +116,13 @@ Init <- function(sim) {
 
   tspSKMistik$treeData$OrigPlotID1 <- paste0("SKMistik", tspSKMistik$treeData$OrigPlotID1)
   tspSKMistik$plotHeaderData$OrigPlotID1 <- paste0("SKMistik", tspSKMistik$plotHeaderData$OrigPlotID1)
-
   sim$PSPmeasure <- rbindlist(list(pspAB$treeData,
                                    pspBC$treeData,
                                    pspSK$treeData,
                                    tspSKMistik$treeData,
                                    pspNFI$treeData),
-                              use.names = TRUE)
+                              use.names = TRUE, 
+                              fill = TRUE)
 
   sim$PSPplot <- rbindlist(list(pspAB$plotHeaderData,
                                 pspBC$plotHeaderData,
@@ -180,28 +192,40 @@ geoCleanPSP <- function(Locations) {
 .inputObjects <- function(sim) {
   dPath <- dataPath(sim)
 
-  if (!suppliedElsewhere("pspABMatureRaw", sim)) {
+  if (!suppliedElsewhere("pspABtreeMeasure", sim)) {
 
-    pspABMatureRaw <- prepInputs(targetFile = file.path(dPath, "ABMatureTreeData.csv"),
-                            url = extractURL(objectName = "pspABMatureRaw"),
-                            fun = "read.csv",
-                            destinationPath = dPath,
-                            filename2 = "ABMatureTreeData.csv")
-    sim$pspABMatureRaw <- data.table(pspABMatureRaw)
-
-
+    sim$pspABtreeMeasure <- prepInputs(targetFile = file.path(dPath, "trees_measurement.csv"),
+                            url = extractURL(objectName = "pspABtreeMeasure"),
+                            fun = "fread",
+                            overwrite = TRUE,
+                            destinationPath = dPath)
+  }
+  
+  if (!suppliedElsewhere("pspABtree", sim)) {
+    
+    sim$pspABtree <- prepInputs(targetFile = file.path(dPath, "trees.csv"),
+                                   url = extractURL(objectName = "pspABtree"),
+                                   fun = "fread",
+                                   overwrite = TRUE,
+                                   destinationPath = dPath)
   }
 
-  if (!suppliedElsewhere("pspLocationAB", sim)) {
+  if (!suppliedElsewhere("pspABplotMeasure", sim)) {
 
-    pspLocationABRaw <- prepInputs(targetFile = file.path(dPath, "plotLocation.csv"),
-                                   url = extractURL(objectName = "pspLocationABRaw"),
+    sim$pspABplotMeasure <- prepInputs(targetFile = file.path(dPath, "plot_measurement.csv"),
+                                   url = extractURL(objectName = "pspABplotMeasure"),
                                    destinationPath = dPath,
-                                   fun = 'read.csv',
-                                   filename2 = "plotLocationAB.csv",
-                                   useCache = TRUE,
-                                   userTags = c(currentModule(sim), "pspLocationABRaw"))
-    sim$pspLocationABRaw <- data.table(pspLocationABRaw)
+                                   overwrite = TRUE,
+                                   fun = 'fread')
+  }
+  
+  if (!suppliedElsewhere("pspABplot", sim)) {
+    
+    sim$pspABplot <- prepInputs(targetFile = file.path(dPath, "plot.csv"),
+                                   url = extractURL(objectName = "pspABplot"),
+                                   fun = "fread",
+                                   overwrite = TRUE,
+                                   destinationPath = dPath)
   }
 
   if (!suppliedElsewhere("pspBCRaw", sim)) {
@@ -242,7 +266,6 @@ geoCleanPSP <- function(Locations) {
                                     url = extractURL(objectName = "pspNFILocationRaw"),
                                     destinationPath = dPath,
                                     fun = 'read.csv',
-                                    purge = 7,
                                     useCache = TRUE,
                                     userTags = c(currentModule(sim), "pspNFILocationRaw"))
 
@@ -255,7 +278,6 @@ geoCleanPSP <- function(Locations) {
                                    url = extractURL(objectName = "pspNFIHeaderRaw"),
                                    destinationPath = dPath,
                                    fun = 'read.csv',
-                                  purge = 7,
                                    overwrite = TRUE)
 
     sim$pspNFIHeaderRaw <- data.table(pspNFIHeaderRaw)
@@ -267,7 +289,6 @@ geoCleanPSP <- function(Locations) {
                                 url = extractURL(objectName = "pspNFITreeRaw"),
                                 destinationPath = dPath,
                                 fun = 'read.csv',
-                                purge = 7,
                                 overwrite = TRUE)
 
     sim$pspNFITreeRaw <- data.table(pspNFITreeRaw)
