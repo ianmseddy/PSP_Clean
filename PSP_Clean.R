@@ -123,6 +123,8 @@ Init <- function(sim) {
                                    pspNFI$treeData),
                               use.names = TRUE, 
                               fill = TRUE)
+  sim$PSPmeasure[, OrigPlotID2 := NULL] 
+  #OrigPlotID2 - previously a column that made a composite key for Alberta - from the 2005 dataset
 
   sim$PSPplot <- rbindlist(list(pspAB$plotHeaderData,
                                 pspBC$plotHeaderData,
