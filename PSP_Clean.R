@@ -12,11 +12,16 @@ defineModule(sim, list(
   documentation = list("README.txt", "PSP_Clean.Rmd"),
   reqdPkgs = list("data.table", "sf"),
   parameters = rbind(
-    #defineParameter("paramName", "paramClass", value, min, max, "parameter description"),
+    defineParameter("ABdamageAgentsToExclude", "numeric", c(3), NA, NA, 
+                    desc = paste("damage agent codes used to filter tree data - trees with these codes",
+                                 "will be removed from all observations to reduce bias in growth and mortality estimation.",
+                                 "The look-up table is found in the GOA PSP Manual. 1 = Spruce Budworm, 20 = insect.",
+                                 "Defaults to MPB (3).")),
+    defineParameter("BCdamageAgentsToExclude", "character", c("IBM"), NA, NA, 
+                    desc = "damage agent codes to exclude in BC - defaults to MPB. See sim$pspBCdamageAgentCodes"),
     defineParameter(".useCache", "logical", FALSE, NA, NA, "Should this entire module be run with caching activated? This is generally intended for data-type modules, where stochasticity and time are not relevant")
   ),
   inputObjects = bindrows(
-    #expectsInput("objectName", "objectClass", "input object description", sourceURL, ...),
     expectsInput(objectName = "pspABplotMeasure", objectClass = "data.table", 
                  desc = "PSP plot measurement data from the Government of Alberta",
                  sourceURL = "https://drive.google.com/file/d/1qGiHEpkeSjiHR73zhmSFEFq8BO8_9GTP/view?usp=sharing"),
@@ -31,12 +36,12 @@ defineModule(sim, list(
                  sourceURL = "https://drive.google.com/file/d/1qGiHEpkeSjiHR73zhmSFEFq8BO8_9GTP/view?usp=sharing"),
     expectsInput(objectName = "pspBCRaw", objectClass = "list", desc = "BC PSP data",
                  sourceURL = "https://drive.google.com/open?id=1P6dcyqwH41-umWvfoCTNQC3BAAWdkitO"),
+    expectsInput(objectName = "pspBCdamageAgentCodes", objectClass = "data.table", desc = "damage agent codes for BC",
+                 sourceURL = "https://drive.google.com/file/d/1pBX5txiKFul3CyZ805seQ9-WNx624Mg4/view?usp=sharing"),
     expectsInput(objectName = "pspSKRaw", objectClass = "list", desc = "SK PSP data",
                  sourceURL = "https://drive.google.com/open?id=1yvOzfNqZ28oLYKTfdDb8-Wip7jBPtCz6"),
     expectsInput(objectName = "tspSKMistikRaw", objectClass = "list", desc = "temporary sampling plots from Saskatchewan?",
                  sourceURL = "https://drive.google.com/open?id=1PCn0DpGwsXBhquW3jOaqks1QC9teo_Xx"),
-    # expectsInput(objectName = "tspSKPPPARaw", objectClass = "list", desc = "temporary sampling plots from Saskatchewan?",
-    #              sourceURL = ) #This data exists in Yong's script but is not in the google drive
     expectsInput(objectName = "pspNFILocationRaw", objectClass = "data.table", desc = "NFI PSP sampling locations",
                  sourceURL = "https://drive.google.com/file/d/1S-4itShMXtwzGxjKPgsznpdTD2ydE9qn/view?usp=sharing"),
     expectsInput(objectName = "pspNFIHeaderRaw", objectClass = "data.table", desc = "NFI PSP header?",
@@ -45,7 +50,6 @@ defineModule(sim, list(
                  sourceURL = "https://drive.google.com/file/d/1i4y1Tfi-kpa5nHnpMbUDomFJOja5uD2g/view?usp=sharing")
   ),
   outputObjects = bindrows(
-    #createsOutput("objectName", "objectClass", "output object description", ...),
     createsOutput(objectName = "PSPmeasure", objectClass = "data.table", desc = "merged PSP and TSP individual measurements"),
     createsOutput(objectName = "PSPplot", objectClass = "data.table", desc = "merged PSP and TSP plot data"),
     createsOutput(objectName = "PSPgis", objectClass = "sf", desc = "Plot location sf object. Contains duplicates")
@@ -73,18 +77,25 @@ doEvent.PSP_Clean = function(sim, eventTime, eventType) {
 ### template initialization
 Init <- function(sim) {
 
+  #TODO: standardize damage agents - they should not be filtered in this module, but by downstream modules. 
   #Alberta
   pspAB <- dataPurification_ABPSP(treeMeasure = sim$pspABtreeMeasure, 
                                   plotMeasure = sim$pspABplotMeasure,
                                   tree = sim$pspABtree,
-                                  plot = sim$pspABplot)
+                                  plot = sim$pspABplot,
+                                  codesToExclude = P(sim)$ABdamageAgentsToExclude)
 
-  #BC
-  pspBC<- dataPurification_BCPSP(treeDataRaw = sim$pspBCRaw$treedata, plotHeaderDataRaw = sim$pspBCRaw$plotheader)
+  #BC - there is no reason to pass damageAgentCodes other than during development 
+  pspBC<- dataPurification_BCPSP(treeDataRaw = sim$pspBCRaw$treedata, 
+                                 plotHeaderDataRaw = sim$pspBCRaw$plotheader,
+                                 damageAgentCodes = sim$pspBCdamageAgentCodes,
+                                 codesToExclude = P(sim)$BCdamageAgentsToExclude)
 
   #Saskatchewan PSP
-  pspSK <- dataPurification_SKPSP(SADataRaw = sim$pspSKRaw$plotheader1, plotHeaderRaw = sim$pspSKRaw$plotheader3,
-                                  measureHeaderRaw = sim$pspSKRaw$plotheader2, treeDataRaw= sim$pspSKRaw$treedata)
+  pspSK <- dataPurification_SKPSP(SADataRaw = sim$pspSKRaw$plotheader1, 
+                                  plotHeaderRaw = sim$pspSKRaw$plotheader3,
+                                  measureHeaderRaw = sim$pspSKRaw$plotheader2, 
+                                  treeDataRaw= sim$pspSKRaw$treedata)
 
   #Saskatchewan Mistik
   tspSKMistik <- dataPurification_SKTSP_Mistik(compiledPlotData = sim$tspSKMistikRaw$plotheader,
@@ -98,10 +109,9 @@ Init <- function(sim) {
                                     approxLocation = sim$pspNFILocationRaw)
 
   pspNFI$treeData[, Species := paste0(Genus, "_", Species)]
-  pspNFI$treeData[,Genus := NULL] #This column is not in any of the other PSP datasets
+  pspNFI$treeData[, Genus := NULL] #This column is not in any of the other PSP datasets
 
   #Rename keys before combining PSP datasets (BC is already unique with BC identified in value)
-  #Composite keys remain separate; 2nd part of key missing from HeaderData
   pspAB$treeData$OrigPlotID1 <- paste0("AB", pspAB$treeData$OrigPlotID1)
   pspAB$plotHeaderData$OrigPlotID1 <- paste0("AB", pspAB$plotHeaderData$OrigPlotID1)
 
@@ -125,6 +135,7 @@ Init <- function(sim) {
                               fill = TRUE)
   sim$PSPmeasure[, OrigPlotID2 := NULL] 
   #OrigPlotID2 - previously a column that made a composite key for Alberta - from the 2005 dataset
+  #plot and stand were concatenated in the 2015 dataset, deprecating OrigPlotID2
 
   sim$PSPplot <- rbindlist(list(pspAB$plotHeaderData,
                                 pspBC$plotHeaderData,
@@ -240,7 +251,13 @@ geoCleanPSP <- function(Locations) {
                            userTags = c(currentModule(sim), "pspBCRaw"))
     sim$pspBCRaw <- pspBCRaw
   }
-
+  if (!suppliedElsewhere("pspBCdamageAgentCodes", sim)) {
+    
+    sim$pspBCdamageAgentCodes <- prepInputs(url = extractURL(objectName = "pspBCdamageAgentCodes"),
+                                            targetFile = "BCForestry_DamageAgentCodes.csv",
+                                            destinationPath = dPath,
+                                            fun = 'fread')
+  }
   if (!suppliedElsewhere("pspSKRaw", sim)) {
 
     pspSKRaw <- prepInputs(targetFile = file.path(dPath, "SKPSP.RData"),

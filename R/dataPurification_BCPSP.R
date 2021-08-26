@@ -1,4 +1,4 @@
-dataPurification_BCPSP = function(treeDataRaw, plotHeaderDataRaw) {
+dataPurification_BCPSP = function(treeDataRaw, plotHeaderDataRaw, damageAgentCodes, codesToExclude) {
 
   headerData <- plotHeaderDataRaw[tot_stand_age != -99,][
     ,':='(utmtimes = length(unique(utm_zone)),
@@ -19,7 +19,6 @@ dataPurification_BCPSP = function(treeDataRaw, plotHeaderDataRaw) {
                            .(SAMP_ID, utm_zone, utm_easting,
                              utm_northing, Elevation = elev, area_pm, tot_stand_age,
                              meas_yr)]
-
 
   headerData[, baseYear := min(meas_yr),
              by = SAMP_ID]
@@ -42,13 +41,31 @@ dataPurification_BCPSP = function(treeDataRaw, plotHeaderDataRaw) {
   treeData <- treeDataRaw[OrigPlotID1 %in% unique(headerData$OrigPlotID1),]
   # range(treeData$meas_yr) # 1926 2014
   # unique(treeData$Plotnumber) # 01 02 03
+  
+  #filtering damage codes - must remove tree from every measurement
+  #there are unlikely to ever be trees with damage codes 3-5
+
+  if (!is.null(codesToExclude)) {
+    damAgents <- damageAgentCodes[`Damage Agent Code` %in% codesToExclude,]$Definition
+    message(paste("removing trees marked as damaged by: "), paste(damAgents, collapse = ", "))
+    bad1 <- treeData[dam_1 %in% codesToExclude, .(OrigPlotID1, OrigPlotID2, tree_no, meas_yr)]
+    bad2 <- treeData[dam_2 %in% codesToExclude, .(OrigPlotID1, OrigPlotID2, tree_no, meas_yr)]
+    bad3 <- treeData[dam_3 %in% codesToExclude, .(OrigPlotID1, OrigPlotID2, tree_no, meas_yr)]
+    bad4 <- treeData[dam_4 %in% codesToExclude, .(OrigPlotID1, OrigPlotID2, tree_no, meas_yr)]
+    bad5 <- treeData[dam_5 %in% codesToExclude, .(OrigPlotID1, OrigPlotID2, tree_no, meas_yr)]
+    allBad <- rbind(bad1, bad2, bad3, bad4, bad5)
+    allBad <- allBad[, .N, .(OrigPlotID1, OrigPlotID2, tree_no)]
+    message(paste("removing", nrow(allBad), "trees due to damage"))
+    
+    #removing the tree from all measurements means it won't be confused for mortality - 
+    #but it makes the module less reliable for other PSP uses... 
+    treeData <- treeData[!allBad, on = c("OrigPlotID1", "OrigPlotID2", "tree_no")]
+  }
+  
   treeData <- treeData[sub_plot_tree == "N",][, OrigPlotID2 := as.numeric(OrigPlotID2)]
-  treeData <- treeData[tree_cls == 1 | tree_cls == 2,.(OrigPlotID1,
-                                                       OrigPlotID2,
-                                                       meas_yr,
-                                                       tree_no,
-                                                       species,
-                                                       dbh, height)]
+  treeData <- treeData[tree_cls == 1 | tree_cls == 2,
+                       .(OrigPlotID1, OrigPlotID2, meas_yr, tree_no, species, dbh, height)]
+  
   # unique(treeData$ld)
   names(treeData)[3:7] <- c("MeasureYear", "TreeNumber", "Species", "DBH", "Height")
 

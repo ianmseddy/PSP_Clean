@@ -1,4 +1,4 @@
-dataPurification_ABPSP <- function(treeMeasure, plotMeasure, tree, plot) {
+dataPurification_ABPSP <- function(treeMeasure, plotMeasure, tree, plot, codesToExclude) {
   
   plot <- copy(plot)
   plotMeasure <- copy(plotMeasure)
@@ -63,7 +63,8 @@ dataPurification_ABPSP <- function(treeMeasure, plotMeasure, tree, plot) {
   headerData_SA <- headerData_SA[, .(stand_age = as.integer(mean(stump_age))), .(company_plot_number, measurement_number)]
   
   #keep measurement_numbers > 1, but drop company plot numbers that don't match
-  plotMeasure <- headerData_SA[plotMeasure[company_plot_number %in% headerData_SA$company_plot_number,], on = c("company_plot_number", "measurement_number")]
+  plotMeasure <- headerData_SA[plotMeasure[company_plot_number %in% headerData_SA$company_plot_number,], 
+                               on = c("company_plot_number", "measurement_number")]
   
   baseYear <- plotMeasure[measurement_number == 1]
   baseYear[, baseYear := measurement_year]
@@ -88,8 +89,9 @@ dataPurification_ABPSP <- function(treeMeasure, plotMeasure, tree, plot) {
   #we cannot remove individual trees due to MPB - we need to throw out the measurement. 
   #From GOA PSP manual June 2019 - pg 26
   badConditions <- c(1, 2, 13, 14) #standing dead, dead down, cut down, missing
-  
-  badCauses <- c(1, 3, 20) #Spruce budworm, Mountain pine beetle, insect (other)
+  #TODO: parameterize bad causes 
+  badCauses <- codesToExclude 
+  #Previous defaults were 1 = Spruce budworm, 3 = Mountain pine beetle, 20 = insect (other)
   
   #determine what proportion of a plot has a condition caused by MPB, SPB, or insects
   treeCheck <- treeMeasure[, .(totalBad = sum(cause1 %in% badCauses | 
